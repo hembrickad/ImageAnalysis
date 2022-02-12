@@ -1,0 +1,33 @@
+import sys
+from PIL import Image
+
+#def snp(image, strength = 1):
+    
+
+
+
+
+
+
+
+
+
+
+
+
+# order of input is "python <name> <path> <arg1> <arg2> ...."
+def main():
+    argc = len(sys.argv)
+    argv = str(sys.argv)
+    path = argv[1]
+    im_org = Image.open(path)
+    im_new = im_org
+
+    #if(argc > 1)
+       # if "--snp" in argv:
+
+       # if ""
+
+
+if __name__ == "__main__":
+    main()   
