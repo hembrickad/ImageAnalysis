@@ -1,20 +1,46 @@
 import sys
 from PIL import Image
 import numpy as np
+from collections import defaultdict
+import random
 
-#def snp(image, strength = 1):
-    
-def pixel_val(image):
+def snp(image, str = 1):
+    if str == 1:
+        
+
+"""
+Make four different lists one for r,b,g,k
+r is the first number, b is the second number, g is the third number, and k is the average of all three
+
+
+"""    
+def pixel_val(image, channel = "k"):
     array = np.array(image)
-    print(array[1])
+    d = defaultdict()
     list = [0]*255
-    for n in image:
+
+
+
+
+
+    """
+    for n in array:
+        for m in n:
+            if(n > 255):
+                d.append(255)
+            elif(n < 0):
+                d.append(0)
+            else:
+                d.append(array[n][m])
+    print(d)
+
         if(n > 255):
             list[255] += 1
         elif(n < 0):
             list[0] += 1
         else:
             list[n] += 1
+        """
 
 
 
@@ -26,8 +52,7 @@ def pixel_val(image):
 
 
 
-
-# order of input is "python <name> <path> <arg1> <arg2> ...."
+# order of input is "python <name> <path> <channel> <function1> ...."
 def main():
     argc = len(sys.argv)
     argv = str(sys.argv)
