@@ -1,8 +1,20 @@
 import sys
 from PIL import Image
+import numpy as np
 
 #def snp(image, strength = 1):
     
+def pixel_val(image):
+    array = np.array(image)
+    print(array[1])
+    list = [0]*255
+    for n in image:
+        if(n > 255):
+            list[255] += 1
+        elif(n < 0):
+            list[0] += 1
+        else:
+            list[n] += 1
 
 
 
@@ -19,11 +31,13 @@ from PIL import Image
 def main():
     argc = len(sys.argv)
     argv = str(sys.argv)
-    path = argv[1]
+    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/let51.BMP"
     im_org = Image.open(path)
     im_new = im_org
+    
+    print(pixel_val(im_org))
 
-    #if(argc > 1)
+    #if(argc > 2)
        # if "--snp" in argv:
 
        # if ""
