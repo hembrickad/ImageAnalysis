@@ -3,12 +3,10 @@ from PIL import Image
 import numpy as np
 from collections import defaultdict
 import random
-
+"""
 def snp(image, str = 1):
     if str == 1:
-        
 
-"""
 Make four different lists one for r,b,g,k
 r is the first number, b is the second number, g is the third number, and k is the average of all three
 
@@ -16,32 +14,17 @@ r is the first number, b is the second number, g is the third number, and k is t
 """    
 def pixel_val(image, channel = "k"):
     array = np.array(image)
-    d = defaultdict()
-    list = [0]*255
-
-
-
-
-
-    """
-    for n in array:
-        for m in n:
-            if(n > 255):
-                d.append(255)
-            elif(n < 0):
-                d.append(0)
-            else:
-                d.append(array[n][m])
-    print(d)
-
-        if(n > 255):
-            list[255] += 1
-        elif(n < 0):
-            list[0] += 1
-        else:
-            list[n] += 1
-        """
-
+    r = list()
+    g = list()
+    b = list()
+    k = list()
+    for x in array:
+        for n in x:
+            r.append(int(n[0]))
+            g.append(int(n[1]))
+            b.append(int(n[2]))
+            k.append((int(n[0]) + int(n[1]) + int(n[2]))//3)
+    return np.array(k)
 
 
 
@@ -60,12 +43,8 @@ def main():
     im_org = Image.open(path)
     im_new = im_org
     
-    print(pixel_val(im_org))
-
-    #if(argc > 2)
-       # if "--snp" in argv:
-
-       # if ""
+    im_new = Image.fromarray(pixel_val(im_org).astype(np.uint8))
+    
 
 
 if __name__ == "__main__":
