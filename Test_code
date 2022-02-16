@@ -1,0 +1,29 @@
+using.System;
+
+
+namespace ImageProj
+{
+
+    class Processing
+    {
+        public static void Main(string[] args){
+     
+
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

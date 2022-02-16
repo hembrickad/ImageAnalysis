@@ -14,17 +14,30 @@ r is the first number, b is the second number, g is the third number, and k is t
 """    
 def pixel_val(image, channel = "k"):
     array = np.array(image)
+    finished = list()
     r = list()
     g = list()
     b = list()
     k = list()
+    num = 0
     for x in array:
         for n in x:
-            r.append(int(n[0]))
-            g.append(int(n[1]))
-            b.append(int(n[2]))
-            k.append((int(n[0]) + int(n[1]) + int(n[2]))//3)
-    return np.array(k)
+            num = 0
+            r.append((int(n[0]), int(n[0]), int(n[0])))
+            g.append((int(n[1]),int(n[1]),int(n[1])))
+            b.append((int(n[2]), int(n[2]), int(n[2])))
+            num = (int(n[0]) + int(n[1]) + int(n[2]))//3
+            k.append((num, num, num))
+        if channel == "r":
+            finished.append(r)
+        elif channel == "g":
+            finished.append(g)
+        elif channel == "b":
+            finished.append(b)
+        else:
+            finished.append(k)
+    return np.array(finished)
+    
 
 
 
@@ -39,12 +52,16 @@ def pixel_val(image, channel = "k"):
 def main():
     argc = len(sys.argv)
     argv = str(sys.argv)
-    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/let51.BMP"
+    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/Test_pic.jpeg"
     im_org = Image.open(path)
     im_new = im_org
     
+    print(pixel_val(im_org))
+
+
     im_new = Image.fromarray(pixel_val(im_org).astype(np.uint8))
-    
+    print(im_new)
+    im_new = im_new.save("New_Image.jpeg")
 
 
 if __name__ == "__main__":
