@@ -2,45 +2,81 @@ import sys
 from PIL import Image
 import numpy as np
 from collections import defaultdict
-import random
+from random import randint
+
 """
-def snp(image, str = 1):
-    if str == 1:
-
-Make four different lists one for r,b,g,k
-r is the first number, b is the second number, g is the third number, and k is the average of all three
-
-
-"""    
-def pixel_val(image, channel = "k"):
-    array = np.array(image)
-    finished = list()
-    r = list()
-    g = list()
-    b = list()
-    k = list()
+"""
+def snp_rand(val, div):
+    r = randint(0, 1000)
+    if(r < 1000//div):
+        if(r %2 == 0):
+            return 0
+        else:
+            return 255
+    return val
+"""
+"""
+def snp(array, str = 1):
     num = 0
+    if str == 0: 
+        return array
+    elif str == 1:
+        for x in array:
+            for n in x:
+                num = snp_rand(n[0], 50)
+                n[0] = num
+                n[1] = num
+                n[2] = num
+    elif str == 2:
+        for x in array:
+            for n in x:
+                num = snp_rand(n[0], 10)
+                n[0] = num
+                n[1] = num
+                n[2] = num
+    else:
+        for x in array:
+            for n in x:
+                num = snp_rand(n[0], 5)
+                n[0] = num
+                n[1] = num
+                n[2] = num  
+    return array
+
+#Not Finished
+def visualize(histo):
+    pass 
+#Not Finished
+def histo_avg(HistoList):
+    pass
+#Not Finished
+def histo_one(array):
+    histo = [0] * 256
     for x in array:
         for n in x:
-            num = 0
-            r.append((int(n[0]), int(n[0]), int(n[0])))
-            g.append((int(n[1]),int(n[1]),int(n[1])))
-            b.append((int(n[2]), int(n[2]), int(n[2])))
-            num = (int(n[0]) + int(n[1]) + int(n[2]))//3
-            k.append((num, num, num))
-        if channel == "r":
-            finished.append(r)
-        elif channel == "g":
-            finished.append(g)
-        elif channel == "b":
-            finished.append(b)
-        else:
-            finished.append(k)
-    return np.array(finished)
+            histo[n[0]] += 1
+    #visualize()
+#Not Finished
+def histo_equal(histo, array):
+    pass
+
+"""
+"""    
+def pixel_val(image, channel = "g"):
+    array = np.array(image)
+    for x in array:
+        for n in x:
+            if channel == "r":
+                n[1] = n[0]
+                n[2] = n[0]
+            elif channel == "g":
+                n[1] = n[2]
+                n[0] = n[2]
+            elif channel == "b":
+                n[0] = n[1]
+                n[2] = n[1]
+    return array
     
-
-
-
 
 
 
@@ -50,18 +86,20 @@ def pixel_val(image, channel = "k"):
 
 # order of input is "python <name> <path> <channel> <function1> ...."
 def main():
+    w = 0
+    h = 0
     argc = len(sys.argv)
     argv = str(sys.argv)
-    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/Test_pic.jpeg"
+    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/let51.BMP"
     im_org = Image.open(path)
+    w,h = im_org.size
     im_new = im_org
-    
-    print(pixel_val(im_org))
 
-
-    im_new = Image.fromarray(pixel_val(im_org).astype(np.uint8))
-    print(im_new)
-    im_new = im_new.save("New_Image.jpeg")
+    im_array = pixel_val(im_org)
+    im_array = histo_one(im_array)
+    #im_array = snp(im_array,1)
+    im_new = Image.fromarray(im_array)
+    im_new = im_new.save("New_Image.BMP", "BMP")
 
 
 if __name__ == "__main__":
