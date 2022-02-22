@@ -20,7 +20,7 @@ Impliment the salt and pepper function whith a variation of strength between 1-3
 """
 def snp(array, str = 1):
     num = 0
-    if str == 0: 
+    if str <1: 
         return array
     elif str == 1:
         for x in array:
@@ -44,10 +44,36 @@ def snp(array, str = 1):
                 n[1] = num
                 n[2] = num  
     return array
+"""
+Shifts the pixel values between the range of -str to str randomly. It defaults to strength 10
+"""
+def gausNoise(array, str = 10):
+    num = 0
+    if str == 0:
+        return array
+    else:
+        for x in array:
+            for n in x:
+                num = randint(str*-1, str)
+                n[0] += num 
+                if n[0] < 0:
+                    n[0] = 0
+                elif n[0]> 255:
+                    n[0] = 255
+                n[1]=n[0]
+                n[2]=n[0]
+    return array
+
+    
+
+
 
 #Not Finished
 def visualize(histo):
     pass 
+
+def reImage(histo):
+    pass
 #Not Finished
 def histo_avg(HistoList):
     pass
@@ -58,9 +84,25 @@ def histo_one(array):
         for n in x:
             histo[n[0]] += 1
     #visualize()
+    return histo
 #Not Finished
 def histo_equal(histo, array):
     pass
+#Not Finished
+def histo_quant(histo, array, user = 2):
+    quant = [0] * (len(histo)//user + 1)
+    x = []
+    y = []
+    binhist = []
+    for i in range(len(histo)):
+        while i%user != 0:
+            x.append(i)
+        y.append(x.copy())
+        x = []
+    for i in y:
+        pass
+
+  
 
 """
 """    
@@ -81,11 +123,6 @@ def pixel_val(image, channel = "g"):
     
 
 
-
-
-
-
-
 # order of input is "python <name> <path> <channel> <function1> ...."
 def main():
     w = 0
@@ -97,10 +134,11 @@ def main():
     w,h = im_org.size
     im_new = im_org
 
-    im_array = pixel_val(im_org)
-    im_array = histo_one(im_array)
-    #im_array = snp(im_array,1)
-    im_new = Image.fromarray(im_array)
+    im_arr = pixel_val(im_org)
+    im_arr = gausNoise(im_arr,150)
+    #im_array = histo_one(im_arr)
+    #i =histo_quant(im_array, im_arr)
+    im_new = Image.fromarray(im_arr)
     im_new = im_new.save("New_Image.BMP", "BMP")
 
 
