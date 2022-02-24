@@ -1,49 +1,72 @@
 import sys
+import pandas as pd
 from PIL import Image
 import numpy as np
-from collections import defaultdict
 from random import randint
+import matplotlib.pyplot as plt
 
+#SPECTRUM MANIPULATION
 """
-Randomizes whether of not pixel is changed or not and to what value
+"""    
+def pixel_val_grey(image, channel = "k"):
+    array = np.array(image)
+    num = 0
+    for x in array:
+        for n in x:
+            if channel == "r":
+                n[1] = n[0]
+                n[2] = n[0]
+            elif channel == "g":
+                n[1] = n[2]
+                n[0] = n[2]
+            elif channel == "b":
+                n[0] = n[1]
+                n[2] = n[1]
+            else:
+                num = (int(n[0])+int(n[1])+int(n[2]))/3
+                n[0] = num
+                n[1] = num
+                n[2] = num
+    return array
 """
-def snp_rand(val, div):
-    r = randint(0, 1000)
-    if(r < 1000//div):
-        if(r %2 == 0):
-            return 0
-        else:
-            return 255
-    return val
 """
-Impliment the salt and pepper function whith a variation of strength between 1-3
+def pixel_val_color(image, channel = "r"):
+    array = np.array(image)
+    for x in array:
+        for n in x:
+            if channel == "r":
+                n[1] = 0
+                n[2] = 0
+            elif channel == "b":
+                n[1] = 0
+                n[0] = 0
+            elif channel == "g":
+                n[0] = 0
+                n[2] = 0
+    return array
+
+#NOISE FUNCTIONS
+"""
+Impliment the salt and pepper function whith a variation of strength between 0-100. The strength(str) defaults to 1
 """
 def snp(array, str = 1):
     num = 0
     if str <1: 
         return array
-    elif str == 1:
-        for x in array:
-            for n in x:
-                num = snp_rand(n[0], 50)
-                n[0] = num
-                n[1] = num
-                n[2] = num
-    elif str == 2:
-        for x in array:
-            for n in x:
-                num = snp_rand(n[0], 10)
-                n[0] = num
-                n[1] = num
-                n[2] = num
     else:
         for x in array:
             for n in x:
-                num = snp_rand(n[0], 5)
-                n[0] = num
-                n[1] = num
-                n[2] = num  
-    return array
+                r = randint(0, 100)
+                if(r < str):
+                    if(r %2 == 0):
+                        n[0] = 0
+                        n[1] = 0
+                        n[2] = 0
+                    else:
+                        n[0] = 255
+                        n[1] = 255
+                        n[2] = 255
+    return array                   
 """
 Shifts the pixel values between the range of -str to str randomly. It defaults to strength 10
 """
@@ -64,14 +87,30 @@ def gausNoise(array, str = 10):
                 n[2]=n[0]
     return array
 
-    
+#FILTERS
+
+
+
+#HISTOGRAMS    
 
 
 
 #Not Finished
 def visualize(histo):
-    pass 
+    x = []
+    for n in range(256):
+        x.append(n)
+    fig = plt.figure()  
+    ax = fig.add_axes([0,0,1,1])
+    ax.bar(x,histo)
+    ax.set_facecolor('xkcd:black')
+    plt.bar(x, histo, color=['white'])
+    plt.tight_layout()
+    plt.show()
+    
+    
 
+#Not Finished
 def reImage(histo):
     pass
 #Not Finished
@@ -83,7 +122,7 @@ def histo_one(array):
     for x in array:
         for n in x:
             histo[n[0]] += 1
-    #visualize()
+    visualize(histo)
     return histo
 #Not Finished
 def histo_equal(histo, array):
@@ -104,23 +143,7 @@ def histo_quant(histo, array, user = 2):
 
   
 
-"""
-"""    
-def pixel_val(image, channel = "g"):
-    array = np.array(image)
-    for x in array:
-        for n in x:
-            if channel == "r":
-                n[1] = n[0]
-                n[2] = n[0]
-            elif channel == "g":
-                n[1] = n[2]
-                n[0] = n[2]
-            elif channel == "b":
-                n[0] = n[1]
-                n[2] = n[1]
-    return array
-    
+
 
 
 # order of input is "python <name> <path> <channel> <function1> ...."
@@ -129,17 +152,17 @@ def main():
     h = 0
     argc = len(sys.argv)
     argv = str(sys.argv)
-    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/let51.BMP"
+    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/Peppers.png"
     im_org = Image.open(path)
     w,h = im_org.size
     im_new = im_org
 
-    im_arr = pixel_val(im_org)
-    im_arr = gausNoise(im_arr,150)
-    #im_array = histo_one(im_arr)
+    im_arr = pixel_val_grey(im_org, "1000")
+    im_arr = snp(im_arr,25)
+    im_array = histo_one(im_arr)
     #i =histo_quant(im_array, im_arr)
     im_new = Image.fromarray(im_arr)
-    im_new = im_new.save("New_Image.BMP", "BMP")
+    im_new = im_new.save("New_Image.png")
 
 
 if __name__ == "__main__":
