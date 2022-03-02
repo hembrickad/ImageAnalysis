@@ -2,8 +2,20 @@ import sys
 import pandas as pd
 from PIL import Image
 import numpy as np
+import random 
 from random import randint
 import matplotlib.pyplot as plt
+from time import process_time as pt
+#LISTS FOR AVERAGING
+h_avg = []
+#RANDOM METHODS
+def intp(image, histo):
+    for x in image:
+        for n in x:
+            n[0] = histo[n[0]] + (n[0] - (n[0] + 1))*((histo[n[0]+1]-histo[n[0]])/((n[0]+1)-n[0]))
+            n[1] = n[0]
+            n[2] = n[0]
+    return image
 
 #SPECTRUM MANIPULATION
 """
@@ -86,16 +98,37 @@ def gausNoise(array, str = 10):
                 n[1]=n[0]
                 n[2]=n[0]
     return array
+#EXTRA
+def speck(array, str = 75):
+    num = 0
+    if str == 0:
+        return array
+    elif str <= 100:
+        for x in array:
+            for n in x:
+                num = random.uniform((str*-1)/100, str/100)
+                n[0] *=(1+num)
+                if n[0] < 0:
+                    n[0] = 0
+                elif n[0]> 255:
+                    n[0] = 255
+                n[1]=n[0]
+                n[2]=n[0]
+    return array
+
+
+
 
 #FILTERS
-
+def LFilter(array, user1, scale):
+    pass
+def MFilter():
+    pass
 
 
 #HISTOGRAMS    
-
-
-
-#Not Finished
+"""
+"""
 def visualize(histo):
     x = []
     for n in range(256):
@@ -107,28 +140,29 @@ def visualize(histo):
     plt.bar(x, histo, color=['white'])
     plt.tight_layout()
     plt.show()
-    
-    
-
-#Not Finished
-def reImage(histo):
-    pass
-#Not Finished
-def histo_avg(HistoList):
-    pass
-#Not Finished
+"""
+"""
 def histo_one(array):
     histo = [0] * 256
     for x in array:
         for n in x:
             histo[n[0]] += 1
-    visualize(histo)
+    #visualize(histo)
     return histo
+"""
+"""
+def histo_equal(array, histo):
+    cd = [0] * len(histo)
+    cd[0] = histo[0]
+    for i in range(1, len(histo)):
+        cd[i] = cd[i-1]+histo[i]
+    cd = [x * 255 / cd[-1] for x in cd]
+
+    arr = intp(array, cd) 
+    return arr
+
 #Not Finished
-def histo_equal(histo, array):
-    pass
-#Not Finished
-def histo_quant(histo, array, user = 2):
+def histo_Uniquant(histo, array, size = 2):
     quant = [0] * (len(histo)//user + 1)
     x = []
     y = []
@@ -139,7 +173,16 @@ def histo_quant(histo, array, user = 2):
         y.append(x.copy())
         x = []
     for i in y:
-        pass
+        pass   
+
+def histo_nonquant(histo, array, size = 2):
+    pass
+
+#Not Finished
+def histo_avg(HistoList):
+    pass
+
+
 
   
 
@@ -148,18 +191,17 @@ def histo_quant(histo, array, user = 2):
 
 # order of input is "python <name> <path> <channel> <function1> ...."
 def main():
-    w = 0
-    h = 0
     argc = len(sys.argv)
     argv = str(sys.argv)
     path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/Peppers.png"
     im_org = Image.open(path)
     w,h = im_org.size
-    im_new = im_org
 
-    im_arr = pixel_val_grey(im_org, "1000")
-    im_arr = snp(im_arr,25)
-    im_array = histo_one(im_arr)
+    im_arr = pixel_val_grey(im_org, "k")
+    im_arr = speck(im_arr)
+    im_hist = histo_one(im_arr)
+    #equal = histo_equal(im_arr, im_hist)
+    #im_hist = histo_one(equal)
     #i =histo_quant(im_array, im_arr)
     im_new = Image.fromarray(im_arr)
     im_new = im_new.save("New_Image.png")
