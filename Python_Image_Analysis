@@ -59,9 +59,9 @@ def pixel_val_color(image, channel = "r"):
 
 #NOISE FUNCTIONS
 """
-Impliment the salt and pepper function whith a variation of strength between 0-100. The strength(str) defaults to 1
+Impliment the salt and pepper function whith a variation of strength between 0-100. The strength(str) defaults to 10
 """
-def snp(array, str = 1):
+def snp(array, str = 10):
     num = 0
     if str <1: 
         return array
@@ -98,7 +98,9 @@ def gausNoise(array, str = 10):
                 n[1]=n[0]
                 n[2]=n[0]
     return array
-#EXTRA
+"""
+Shifts the pixel values between the range of -str to str randomly. It defaults to strength 10
+"""
 def speck(array, str = 75):
     num = 0
     if str == 0:
@@ -116,15 +118,17 @@ def speck(array, str = 75):
                 n[2]=n[0]
     return array
 
-
-
-
 #FILTERS
 def LFilter(array, user1, scale):
     pass
-def MFilter():
+def MFilter(array, user1, scale):
     pass
 
+#EXTRA
+def blur():
+    pass
+def sharpen():
+    pass
 
 #HISTOGRAMS    
 """
@@ -162,7 +166,7 @@ def histo_equal(array, histo):
     return arr
 
 #Not Finished
-def histo_Uniquant(histo, array, size = 2):
+def histo_quant(histo, array, size = 2):
     quant = [0] * (len(histo)//user + 1)
     x = []
     y = []
@@ -174,10 +178,6 @@ def histo_Uniquant(histo, array, size = 2):
         x = []
     for i in y:
         pass   
-
-def histo_nonquant(histo, array, size = 2):
-    pass
-
 #Not Finished
 def histo_avg(HistoList):
     pass
