@@ -1,11 +1,14 @@
+import os
 import sys
+import random 
+import numpy as np
+import collections
 import pandas as pd
 from PIL import Image
-import numpy as np
-import random 
-from random import randint
+from random import randint     
 import matplotlib.pyplot as plt
 from time import process_time as pt
+
 #LISTS FOR AVERAGING
 h_avg = []
 #RANDOM METHODS
@@ -119,9 +122,9 @@ def speck(array, str = 75):
     return array
 
 #FILTERS
-def LFilter(array, user1, scale):
+def LFilter(array, user, scale):
     pass
-def MFilter(array, user1, scale):
+def MFilter(array, user, scale):
     pass
 
 #EXTRA
@@ -167,23 +170,56 @@ def histo_equal(array, histo):
 
 #Not Finished
 def histo_quant(histo, array, size = 2):
-    quant = [0] * (len(histo)//user + 1)
+    quant = [0] * (len(histo)//size + 1)
     x = []
     y = []
     binhist = []
+    if(size > 255):
+       for x in array:
+        for n in x:
+            n[0] = 127
+            n[1] = n[0]
+            n[2] = n[0] 
     for i in range(len(histo)):
-        while i%user != 0:
+        while i%size != 0:
             x.append(i)
+            i+=1
         y.append(x.copy())
         x = []
+    print(y)
+    return y
     for i in y:
         pass   
-#Not Finished
+"""
+"""
 def histo_avg(HistoList):
-    pass
+    for x in Histolist:
+        num = 0
+        for n in range(len(x)):
+            num += n
+        x[n] = num/len(x)
+    return HistoList
 
 
 
+def input(directory):
+    for file in os.listdir(directory):
+        if file.endswith(".BMP"):
+            if file.startswith("para"):
+                pass
+            elif file.startswith("cyl"):
+                pass
+            elif file.startswith("super"):
+                pass
+            elif file.startswith("inter"):
+                pass
+            elif file.startswith("let"):
+                pass 
+            elif file.startswith("mod"):
+                pass
+            elif file.startswith("svar"):
+                pass
+                
   
 
 
@@ -191,16 +227,14 @@ def histo_avg(HistoList):
 
 # order of input is "python <name> <path> <channel> <function1> ...."
 def main():
-    argc = len(sys.argv)
-    argv = str(sys.argv)
     path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/Peppers.png"
     im_org = Image.open(path)
     w,h = im_org.size
 
     im_arr = pixel_val_grey(im_org, "k")
-    im_arr = speck(im_arr)
+    #im_arr = speck(im_arr)
     im_hist = histo_one(im_arr)
-    #equal = histo_equal(im_arr, im_hist)
+    equal = histo_quant(im_hist, im_arr)
     #im_hist = histo_one(equal)
     #i =histo_quant(im_array, im_arr)
     im_new = Image.fromarray(im_arr)
