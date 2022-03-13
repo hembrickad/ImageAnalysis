@@ -1,16 +1,19 @@
 import os
 import sys
 import random 
+import config
 import numpy as np
 import collections
 import pandas as pd
 from PIL import Image
 from random import randint     
 import matplotlib.pyplot as plt
-from time import process_time as pt
+from time import perf_counter
 
 #LISTS FOR AVERAGING
-h_avg = []
+cells = [[],[],[],[],[],[],[]]
+
+
 #RANDOM METHODS
 def intp(image, histo):
     for x in image:
@@ -20,10 +23,28 @@ def intp(image, histo):
             n[2] = n[0]
     return image
 
+def median(l):
+    if len(l)%2 != 0:
+       return l[round(len(l)/2)]
+    else:
+        return int((l[int(len(l)//2)] + l[int(len(l)//2 + 1)])//2)
+
+def msqe(qArray, rArray):
+    num = 0
+    for x in len(rArray):
+        num += np.square(rArray - qArray)
+    return num/len(rArray)
+    
+def time(process, lis):
+    num = 0
+    for x in lis:
+        num += x
+    return num/len(lis)
+
 #SPECTRUM MANIPULATION
 """
 """    
-def pixel_val_grey(image, channel = "k"):
+def pixel_val_grey(image, channel = "b"):
     array = np.array(image)
     num = 0
     for x in array:
@@ -122,16 +143,54 @@ def speck(array, str = 75):
     return array
 
 #FILTERS
-def LFilter(array, user, scale):
-    pass
-def MFilter(array, user, scale):
-    pass
+def LFilter(array, image, user = 1, scale = 1):
+    w,h = image.size
+    nArray = array
+    l = []
+    for n in range(len(array)):
+        for i in range(n):
+            """index = i + (w * n)
+            row, col = n , i
 
-#EXTRA
-def blur():
-    pass
-def sharpen():
-    pass
+            x = np.arange(max(col - user, 0), min(col + user + 1, w))
+            y = np.arange(max(row - user, 0), min(row + user + 1, h))"""
+
+            x = np.arange(-1*user, user)
+            X,Y = np.meshgrid(x,y)
+
+            plt.plot(X, Y, marker = '.', color = 'k', linestyle = 'none')
+            plt.show()
+            nbh = np.sqrt(((X)**2 + (Y)**2))
+
+            m = (nbh < user)
+
+            
+            print (nbh, '\n')
+
+            for j in range(len(Y[m])):
+                l.append(array[0][Y[m][j]][X[m][j]])
+            #median(np.sort(l))
+            l =[]
+
+
+def MFilter(array, image, user = 1, scale = 1):
+    w,h = image.size
+    nArray = array
+    for n in range(len(array)):
+        for i in range(n):
+            index = i + (n * w)
+            row, col = index // w, index%w
+
+            x = np.arange(max(col - user, 0), min(col + user + 1, w))
+            y = np.arange(max(row - user, 0), min(row + user + 1, h))
+
+            X,Y = np.meshgrid(x,y)
+
+            nbh = np.sqrt(((X - col)**2 + (Y - row)**2))
+
+            m = nbh < user
+
+            print(m)
 
 #HISTOGRAMS    
 """
@@ -164,12 +223,11 @@ def histo_equal(array, histo):
     for i in range(1, len(histo)):
         cd[i] = cd[i-1]+histo[i]
     cd = [x * 255 / cd[-1] for x in cd]
-
     arr = intp(array, cd) 
     return arr
 
 #Not Finished
-def histo_quant(histo, array, size = 2):
+def histo_quant(array, histo, size = 2):
     quant = [0] * (len(histo)//size + 1)
     x = []
     y = []
@@ -180,65 +238,97 @@ def histo_quant(histo, array, size = 2):
             n[0] = 127
             n[1] = n[0]
             n[2] = n[0] 
-    for i in range(len(histo)):
-        while i%size != 0:
-            x.append(i)
-            i+=1
-        y.append(x.copy())
-        x = []
-    print(y)
-    return y
+    for i in range(256):
+        pass
+    #return y
     for i in y:
         pass   
 """
 """
-def histo_avg(HistoList):
-    for x in Histolist:
-        num = 0
-        for n in range(len(x)):
-            num += n
-        x[n] = num/len(x)
-    return HistoList
+def histo_avg(l):
+    num = len(l)
+    l = [sum(i) for i in zip(*l)]
+    l = [n / num for n in l]
+    print(l)
+    visualize(l)
 
-
-
+#Stats and Prep
 def input(directory):
-    for file in os.listdir(directory):
-        if file.endswith(".BMP"):
-            if file.startswith("para"):
-                pass
-            elif file.startswith("cyl"):
-                pass
-            elif file.startswith("super"):
-                pass
-            elif file.startswith("inter"):
-                pass
-            elif file.startswith("let"):
-                pass 
-            elif file.startswith("mod"):
-                pass
-            elif file.startswith("svar"):
-                pass
-                
-  
+    for fil in os.listdir(directory):
+        if fil.endswith(".BMP"):
+            if fil.startswith("para"):
+                cells[0].append(directory + fil)
+            elif fil.startswith("cyl"):
+                cells[1].append(directory + fil)
+            elif fil.startswith("super"):
+                cells[2].append(directory + fil)
+            elif fil.startswith("inter"):
+                cells[3].append(directory + fil)
+            elif fil.startswith("let"):
+                cells[4].append(directory + fil) 
+            elif fil.startswith("mod"):
+                cells[5].append(directory + fil)
+            elif fil.startswith("svar"):
+                cells[6].append(directory + fil)
+
+def config(config,image,array):
+    if(config['DEFAULT']['pixel_val_color']['run'] == 'True'):
+        for x in cells:
+            for n in x:
+                im_arr = pixel_val_grey(image, config['DEFAULT']['pixel_val_grey']['channel'])
+    if(config['OTHER']['pixel_val_color']['run'] == 'True'):
+        for x in cells:
+            for n in x:
+                im_arr = pixel_val_color(image, config['DEFAULT']['pixel_val_color']['channel'])
+    if(config['OTHER']['snp']['run'] == 'True'):
+        for x in cells:
+            for n in x:
+                im_arr = snp(im_arr,config['OTHER']['snp']['strength'])
+    if(config['OTHER']['gausNoise']['run'] == 'True'):
+        for x in cells:
+            for n in x:
+                im_arr = snp(im_arr,config['OTHER']['gausNoise']['strength'])
+    if(config['OTHER']['speckle']['run'] == 'True'):
+        for x in cells:
+            for n in x:
+                im_arr = snp(im_arr,config['OTHER']['speckle']['strength'])
+    if(config['OTHER']['histo_equal']['run'] == 'True'):
+        pass
+    if(config['OTHER']['histo_quant']['run'] == 'True'):
+        pass
+    if(config['OTHER']['LFilter']['run'] == 'True'):
+        pass
+    if(config['OTHER']['MFilter']['run'] == 'True'):
+        pass
+    if(config['DEFAULT']['histo_one']['run'] == 'True'):
+        pass
+    if(config['DEFAULT']['histo_avg']['run'] == 'True'):
+        pass
 
 
 
 
-# order of input is "python <name> <path> <channel> <function1> ...."
+
 def main():
-    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/Peppers.png"
-    im_org = Image.open(path)
-    w,h = im_org.size
+    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/"
+    #im_org = Image.open(path)
+    #f = open('config.py', r)
+    im_arr = []
+    HistoList =[]
+    input(path)
 
-    im_arr = pixel_val_grey(im_org, "k")
-    #im_arr = speck(im_arr)
-    im_hist = histo_one(im_arr)
-    equal = histo_quant(im_hist, im_arr)
+    for x in cells[4]:
+        HistoList.append(histo_one(pixel_val_grey(Image.open(x), 'k')))
+    histo_avg(HistoList)    
+
+    #LFilter(im_arr,im_org)
+    #im_arr = speck(im_arr, 25)
+    #im_hist = histo_one(im_arr)
+    #equal = histo_equal(im_arr, im_hist)
     #im_hist = histo_one(equal)
     #i =histo_quant(im_array, im_arr)
-    im_new = Image.fromarray(im_arr)
-    im_new = im_new.save("New_Image.png")
+    #im_new = Image.fromarray(im_arr)
+    #im_new = im_new.save("New_Image.BMP")
 
 
 if __name__ == "__main__":
