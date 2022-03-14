@@ -1,0 +1,73 @@
+import os
+import sys
+import random 
+import config as cfg
+import numpy as np
+import collections
+import pandas as pd
+from PIL import Image
+from random import randint     
+import matplotlib.pyplot as plt
+from time import perf_counter
+
+#Global Variables
+cells = [[],[],[],[],[],[],[]]
+histoTotal = [[],[],[],[],[],[],[]]
+arrayTotal = [[],[],[],[],[],[],[]]
+timeSheet = dict()
+#Set-up
+def input(directory):
+    for fil in os.listdir(directory):
+        if fil.endswith(".BMP"):
+            if fil.startswith("para"):
+                cells[0].append(Image.open(directory + fil))
+            elif fil.startswith("cyl"):
+                cells[1].append(Image.open(directory + fil))
+            elif fil.startswith("super"):
+                cells[2].append(Image.open(directory + fil))
+            elif fil.startswith("inter"):
+                cells[3].append(Image.open(directory + fil))
+            elif fil.startswith("let"):
+                cells[4].append(Image.open(directory + fil)) 
+            elif fil.startswith("mod"):
+                cells[5].append(Image.open(directory + fil))
+            elif fil.startswith("svar"):
+                cells[6].append(Image.open(directory + fil))
+
+def output(directory, image):
+    if((os.path.isdir(directory)) == False):
+        os.mkdir(directory)
+    image = image.save((directory + "/New_Image.BMP"))
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def main():
+    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/let51.BMP"
+    im_org = Image.open(path)
+
+    #input(cfg.config['DEFAULT']['directory'])
+
+    output(('/Users/Adhsketch/Desktop/repos/ImageAnalysis/files'), im_org)
+
+if __name__ == "__main__":
+    main()   
