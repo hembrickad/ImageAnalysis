@@ -3,7 +3,7 @@ import configparser
 config = configparser.ConfigParser()
 config['DEFAULT'] = {'directory': '/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/',
 'pixel_val_grey': 'True',
-'histo_one':'False',
+'histo_one':'True',
 'histo_avg':'False',
 'pixel_val_color': 'False',
 'snp':'False',

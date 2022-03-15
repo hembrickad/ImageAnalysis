@@ -211,11 +211,13 @@ def config():
         timeSheet['Quant'] = []
         total = 0
         oArrays = arrayTotal
+        print(arrayTotal)
+        print(histoTotal)
         for x in range(len(arrayTotal)):
             t = perf_counter()
-            print(len(arrayTotal[0]))
+            print(len(arrayTotal))
             for y in range(len(arrayTotal[x])):
-                arrayTotal[x][y] = histo_quant(arrayTotal[x][y], HistoTotal[x][y],)
+                arrayTotal[x][y] = histo_quant(arrayTotal[x][y], histoTotal[x][y])
             total += (perf_counter() - t)
             timeSheet['Quant'].append((perf_counter() - t))
 
@@ -361,7 +363,7 @@ def histo_equal(array, histo):
     arr = intp(array, cd) 
     return arr
 
-def histo_quant(array, histo, str):
+def histo_quant(array, histo, str = 25):
     i = 0
     r = list(range(256))
     div = [r[x:x+str] for x in range(0, len(r), str)]
