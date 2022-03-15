@@ -140,8 +140,8 @@ def config():
         for x in cells:
             t = perf_counter()
             for n in x:
-                histo.append(pixel_val_grey(n, cfg.config['SETTINGS']['pixel_val_grey']))
-            histoTotal.append(im_arr.copy())
+                histo.append(histo_one(n))
+            histoTotal.append(histo.copy())
             histo = []
 
             total += (perf_counter() - t)
@@ -206,6 +206,8 @@ def config():
 
         timeSheet['Equal'].append(total)
         timeSheet['Equal'].append(total/499)
+
+
 
     if(cfg.config['DEFAULT']['histo_quant'] == 'True'):
         timeSheet['Quant'] = []
