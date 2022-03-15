@@ -1,5 +1,6 @@
 import os
 import sys
+import csv
 import random 
 import config as cfg
 import numpy as np
@@ -15,6 +16,7 @@ cells = [[],[],[],[],[],[],[]]
 histoTotal = [[],[],[],[],[],[],[]]
 arrayTotal = [[],[],[],[],[],[],[]]
 histoAVG = []
+MSQE = [[],[],[],[],[],[],[]]
 timeSheet = dict()
 
 #Miscellaneous Methods
@@ -31,6 +33,9 @@ def median(l):
        return l[round(len(l)/2)]
     else:
         return int((l[int(len(l)//2)] + l[int(len(l)//2 + 1)])//2)
+
+def mean(l):
+  pass
 
 def msqe(qArray, rArray):
     num = 0
@@ -57,15 +62,38 @@ def input(directory):
             elif fil.startswith("svar"):
                 cells[6].append(Image.open(directory + fil))
 
-def output(directory, image, name):
-    if((os.path.isdir(directory)) == False):
-        os.mkdir(directory)
-    image = image.save((directory + name))
+def output(directory):
+    cat = 0
+    ver = 0
+    for i in arrayTotal:
+        for j in i:
+            Image.fromarray(j).save(directory, "newPhotos",cat, "_", ver, ".BMP")
+            ver += 1
+        cat += 1
+        ver = 0           
 
 def TimeSheet(directory):
     df = pd.DataFrame.from_dict(timeSheet, orient='index')
     df.columns['para', 'cyl', 'super', 'inter', 'let', 'mod', 'svar', 'total', 'average']
     df.csv(directory + 'TimeSheet.csv')
+
+def HistoPrint(directory):
+    cat = 0
+    ver = 0
+    for i in histoTotal:
+        for j in i:
+            for n in range(256):
+                x.append(n)
+            fig = plt.figure()  
+            ax = fig.add_axes([0,0,1,1])
+            ax.bar(x,histo)
+            ax.set_facecolor('xkcd:black')
+            plt.bar(x, histo, color=['white'])
+            plt.tight_layout()
+            plt.save(directory + 'histograms', cat, '_', ver, '.png')
+            ver += 1
+        cat += 1
+        ver = 0
 
 def config():
     histo = []
@@ -129,21 +157,21 @@ def config():
         for x in arrayTotal:
             t = perf_counter()
             for n in x:
-                n = snp(n,cfg. config['SETTINGS']['snp'])
+                n = snp(n,cfg.config['SETTINGS']['snp'])
 
             total += perf_counter() - t
             timeSheet['snp'].append(perf_counter() - t)
         timeSheet['snp'].append(total)
         timeSheet['snp'].append(total/499)
 
-    if(cfg.config['DEFAULT']['gausNoise']['run'] == 'True'):
+    if(cfg.config['DEFAULT']['gausNoise'] == 'True'):
         timeSheet['gausNoise'] = []
         total = 0
 
         for x in arrayTotal:
             t = perf_counter()
             for n in x:
-                n = gausNoise(n,cfg. config['SETTINGS']['gausNoise'])
+                n = gausNoise(n,cfg.config['SETTINGS']['gausNoise'])
 
             total += perf_counter() - t
             timeSheet['gausNoise'].append(perf_counter() - t)
@@ -157,7 +185,7 @@ def config():
         for x in arrayTotal:
             t = perf_counter()
             for n in x:
-                n = speck(n,cfg. config['SETTINGS']['speckle'])
+                n = speck(n,cfg.config['SETTINGS']['speckle'])
 
             total += perf_counter() - t
             timeSheet['speckle'].append(perf_counter() - t)
@@ -168,20 +196,36 @@ def config():
         timeSheet['Equal'] = []
         total = 0
 
-        for x in cells:
+        for x in range(len(arrayTotal)):
             t = perf_counter()
-            for n in x:
-                im_arr.append(pixel_val_grey(n, cfg.config['SETTINGS']['histo_equal']))
-            arrayTotal.append(im_arr.copy())
-            im_arr = []
+            for y in range(len(arrayTotal[x])):
+                arrayTotal[x][y] = histo_equal(arrayTotal[x][y], HistoTotal[x][y])
 
             total += (perf_counter() - t)
             timeSheet['Equal'].append((perf_counter() - t))
 
         timeSheet['Equal'].append(total)
-        timeSheet['Equal'].append(total/499)  
+        timeSheet['Equal'].append(total/499)
 
-    #if(cfg.config['DEFAULT']['histo_equal'] == 'True')
+    if(cfg.config['DEFAULT']['histo_quant'] == 'True'):
+        timeSheet['Quant'] = []
+        total = 0
+        oArrays = arrayTotal
+        for x in range(len(arrayTotal)):
+            t = perf_counter()
+            print(len(arrayTotal[0]))
+            for y in range(len(arrayTotal[x])):
+                arrayTotal[x][y] = histo_quant(arrayTotal[x][y], HistoTotal[x][y],)
+            total += (perf_counter() - t)
+            timeSheet['Quant'].append((perf_counter() - t))
+
+        timeSheet['Quant'].append(total)
+        timeSheet['Quant'].append(total/499)     
+
+        for x in range(len(arrayTotal)):
+            for n in range(len(arrayTotal[x])):
+                MSQE[x][n] = msqe(arrayTotal,oArrays)
+
 
 
     if(cfg.config['DEFAULT']['histo_avg'] == 'True'):
@@ -340,9 +384,44 @@ def histo_quant(array, histo, str):
     
     return array
             
+def MFilter(array, image, size = 1, str = 1):
+    w,h = image.size
+    nArray = array
+    l = []
+    med = 0
+    j = 0
+    i = 0
+
+ 
+
+    for n in array:
+        for x in n:
+            row, col = j , i
+
+            x = np.arange(max(col-size, 0), min(col + size +1, w))
+            y = np.arange(max(col-size, 0), min(col + size +1, h))
+
+            X,Y = np.meshgrid(x,y)
+
+            nbh = np.sqrt(((X-col)**2 + (Y-row)**2))
 
 
+            m = (nbh < size)
+            print((Y[m] * w)+ X[m])
+            for k in range(len(Y[m])):
+                #print(len(array[0][Y[m][k]][X[m][k]]))
+                l.append(array[Y[m][k]][X[m][k]])
 
+            print(i)
+            med = median(np.sort(l))
+            nArray[j][i][0] = nArray[j][i][0] + round(med *(s/100))
+            nArray[j][i][1] = nArray[j][i][0]
+            nArray[j][i][2] = nArray[j][i][0]
+            l = []
+            i +=1
+        j +=1
+        i = 0
+    return nArray
 
 
 
@@ -355,16 +434,25 @@ def main():
     path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/svar01.BMP"
     im_org = Image.open(path)
 
-    arr = pixel_val_grey(im_org)
-    hist = histo_one(arr)
-    image = histo_quant(arr, hist, 75)
+    #arr = pixel_val_grey(im_org)
+    #hist = histo_one(arr)
+    #image = histo_quant(arr, hist, 75)
 
-    Image.fromarray(image).save("NI.BMP")
-    #input(cfg.config['DEFAULT']['directory'])
-    #config()
+    '''MFilter(arr, im_org, 2, 2)'''
 
 
+    #Image.fromarray(image).save("NI.BMP")
+    input(cfg.config['DEFAULT']['directory'])
+    config()
 
+    #TimeSheet(cfg.['DEFAULT']['directory'] + 'TimeSheet')
+
+    #output(cfg.config['DEFAULT']['directory'])
+
+
+    #HistoPrint(cfg.config['DEFAULT']['directory'])
+    
+    print(MSQE)
     print(timeSheet)
 
 if __name__ == "__main__":
