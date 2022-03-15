@@ -249,13 +249,9 @@ def histo_quant(array, histo, size = 2):
 def histo_avg(l):
     t = 0
     total= 0
-    t = perf_counter()
     num = len(l)
     l = [sum(i) for i in zip(*l)]
     l = [n / num for n in l]
-    total = perf_counter() - t
-    print(total)
-    visualize(l)
 
 
 

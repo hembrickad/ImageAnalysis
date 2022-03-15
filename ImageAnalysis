@@ -14,7 +14,30 @@ from time import perf_counter
 cells = [[],[],[],[],[],[],[]]
 histoTotal = [[],[],[],[],[],[],[]]
 arrayTotal = [[],[],[],[],[],[],[]]
+histoAVG = []
 timeSheet = dict()
+
+#Miscellaneous Methods
+def intp(image, histo):
+    for x in image:
+        for n in x:
+            n[0] = histo[n[0]] + (n[0] - (n[0] + 1))*((histo[n[0]+1]-histo[n[0]])/((n[0]+1)-n[0]))
+            n[1] = n[0]
+            n[2] = n[0]
+    return image
+
+def median(l):
+    if len(l)%2 != 0:
+       return l[round(len(l)/2)]
+    else:
+        return int((l[int(len(l)//2)] + l[int(len(l)//2 + 1)])//2)
+
+def msqe(qArray, rArray):
+    num = 0
+    for x in len(rArray):
+        num += np.square(rArray - qArray)
+    return num/len(rArray)
+
 #Set-up
 def input(directory):
     for fil in os.listdir(directory):
@@ -34,22 +57,289 @@ def input(directory):
             elif fil.startswith("svar"):
                 cells[6].append(Image.open(directory + fil))
 
-def output(directory, image):
+def output(directory, image, name):
     if((os.path.isdir(directory)) == False):
         os.mkdir(directory)
-    image = image.save((directory + "/New_Image.BMP"))
+    image = image.save((directory + name))
+
+def TimeSheet(directory):
+    df = pd.DataFrame.from_dict(timeSheet, orient='index')
+    df.columns['para', 'cyl', 'super', 'inter', 'let', 'mod', 'svar', 'total', 'average']
+    df.csv(directory + 'TimeSheet.csv')
+
+def config():
+    histo = []
+    im_arr = []
+
+    if(cfg.config['DEFAULT']['pixel_val_grey'] == 'True'):
+        timeSheet['grey'] = []
+        total = 0
+
+        for x in cells:
+            t = perf_counter()
+            for n in x:
+                im_arr.append(pixel_val_grey(n, cfg.config['SETTINGS']['pixel_val_grey']))
+            arrayTotal.append(im_arr.copy())
+            im_arr = []
+
+            total += (perf_counter() - t)
+            timeSheet['grey'].append((perf_counter() - t))
+
+        timeSheet['grey'].append(total)
+        timeSheet['grey'].append(total/499)
+
+    if(cfg.config['DEFAULT']['pixel_val_color'] == 'True'):
+        timeSheet['color'] = []
+        total = 0
+
+        for x in cells:
+            t = perf_counter()
+            for n in x:
+                im_arr.append(pixel_val_grey(n, cfg.config['SETTINGS']['pixel_val_color']))
+            arrayTotal.append(im_arr.copy())
+            im_arr = []
+
+            total += (perf_counter() - t)
+            timeSheet['grey'].append((perf_counter() - t))
+
+        timeSheet['color'].append(total)
+        timeSheet['color'].append(total/499)
+
+    if(cfg.config['DEFAULT']['histo_one'] == 'True'):
+        timeSheet['histo'] = []
+        total = 0
+
+        for x in cells:
+            t = perf_counter()
+            for n in x:
+                histo.append(pixel_val_grey(n, cfg.config['SETTINGS']['pixel_val_grey']))
+            histoTotal.append(im_arr.copy())
+            histo = []
+
+            total += (perf_counter() - t)
+            timeSheet['histo'].append((perf_counter() - t))
+
+        timeSheet['histo'].append(total)
+        timeSheet['histo'].append(total/499)
     
+    if(cfg.config['DEFAULT']['snp'] == 'True'):
+        timeSheet['snp'] = []
+        total = 0
+
+        for x in arrayTotal:
+            t = perf_counter()
+            for n in x:
+                n = snp(n,cfg. config['SETTINGS']['snp'])
+
+            total += perf_counter() - t
+            timeSheet['snp'].append(perf_counter() - t)
+        timeSheet['snp'].append(total)
+        timeSheet['snp'].append(total/499)
+
+    if(cfg.config['DEFAULT']['gausNoise']['run'] == 'True'):
+        timeSheet['gausNoise'] = []
+        total = 0
+
+        for x in arrayTotal:
+            t = perf_counter()
+            for n in x:
+                n = gausNoise(n,cfg. config['SETTINGS']['gausNoise'])
+
+            total += perf_counter() - t
+            timeSheet['gausNoise'].append(perf_counter() - t)
+        timeSheet['gausNoise'].append(total)
+        timeSheet['gausNoise'].append(total/499)
+
+    if(cfg.config['DEFAULT']['speckle'] == 'True'):
+        timeSheet['speckle'] = []
+        total = 0
+
+        for x in arrayTotal:
+            t = perf_counter()
+            for n in x:
+                n = speck(n,cfg. config['SETTINGS']['speckle'])
+
+            total += perf_counter() - t
+            timeSheet['speckle'].append(perf_counter() - t)
+        timeSheet['speckle'].append(total)
+        timeSheet['speckle'].append(total/499)  
+
+    if(cfg.config['DEFAULT']['histo_equal'] == 'True'):
+        timeSheet['Equal'] = []
+        total = 0
+
+        for x in cells:
+            t = perf_counter()
+            for n in x:
+                im_arr.append(pixel_val_grey(n, cfg.config['SETTINGS']['histo_equal']))
+            arrayTotal.append(im_arr.copy())
+            im_arr = []
+
+            total += (perf_counter() - t)
+            timeSheet['Equal'].append((perf_counter() - t))
+
+        timeSheet['Equal'].append(total)
+        timeSheet['Equal'].append(total/499)  
+
+    #if(cfg.config['DEFAULT']['histo_equal'] == 'True')
+
+
+    if(cfg.config['DEFAULT']['histo_avg'] == 'True'):
+        timeSheet['HistoAVG'] = []
+        total = 0
+
+        for x in histoTotal:
+            t = perf_counter()
+            histoAVG.append(histo_avg(x))
+
+            total += perf_counter() - t
+            timeSheet['HistoAVG'].append(perf_counter() - t)
+        timeSheet['HistoAVG'].append(total)
+        timeSheet['HistoAVG'].append(total/499)
 
 
 
 
 
 
+#SPECTRUM MANIPULATION
+def pixel_val_grey(image, channel = "k"):
+    array = np.array(image)
+    num = 0
+    for x in array:
+        for n in x:
+            if channel == "r":
+                n[1] = n[0]
+                n[2] = n[0]
+            elif channel == "g":
+                n[1] = n[2]
+                n[0] = n[2]
+            elif channel == "b":
+                n[0] = n[1]
+                n[2] = n[1]
+            else:
+                num = (int(n[0])+int(n[1])+int(n[2]))/3
+                n[0] = num
+                n[1] = num
+                n[2] = num
+    return array
 
+def pixel_val_color(image, channel = "r"):
+    array = np.array(image)
+    for x in array:
+        for n in x:
+            if channel == "r":
+                n[1] = 0
+                n[2] = 0
+            elif channel == "b":
+                n[1] = 0
+                n[0] = 0
+            elif channel == "g":
+                n[0] = 0
+                n[2] = 0
+    return array
 
+#Noise
+def snp(array, str = 10):
+    num = 0
+    if str <1: 
+        return array
+    else:
+        for x in array:
+            for n in x:
+                r = randint(0, 100)
+                if(r < str):
+                    if(r %2 == 0):
+                        n[0] = 0
+                        n[1] = 0
+                        n[2] = 0
+                    else:
+                        n[0] = 255
+                        n[1] = 255
+                        n[2] = 255
+    return array 
 
+def gausNoise(array, str = 10):
+    num = 0
+    if str == 0:
+        return array
+    else:
+        for x in array:
+            for n in x:
+                num = randint(str*-1, str)
+                n[0] += num 
+                if n[0] < 0:
+                    n[0] = 0
+                elif n[0]> 255:
+                    n[0] = 255
+                n[1]=n[0]
+                n[2]=n[0]
+    return array
 
+def speck(array, str = 75):
+    num = 0
+    if str == 0:
+        return array
+    elif str <= 100:
+        for x in array:
+            for n in x:
+                num = random.uniform((str*-1)/100, str/100)
+                n[0] *=(1+num)
+                if n[0] < 0:
+                    n[0] = 0
+                elif n[0]> 255:
+                    n[0] = 255
+                n[1]=n[0]
+                n[2]=n[0]
+    return array
 
+#Basic Histogram
+def histo_one(array):
+    histo = [0] * 256
+    for x in array:
+        for n in x:
+            histo[n[0]] += 1
+    return histo
+
+def histo_avg(l):
+    t = 0
+    total= 0
+    num = len(l)
+    l = [sum(i) for i in zip(*l)]
+    l = [n / num for n in l]
+
+def histo_equal(array, histo):
+    cd = [0] * len(histo)
+    cd[0] = histo[0]
+    for i in range(1, len(histo)):
+        cd[i] = cd[i-1]+histo[i]
+    cd = [x * 255 / cd[-1] for x in cd]
+    arr = intp(array, cd) 
+    return arr
+
+def histo_quant(array, histo, str):
+    i = 0
+    r = list(range(256))
+    div = [r[x:x+str] for x in range(0, len(r), str)]
+
+    div = [sum(i) for i in div]
+    div = [round(n / str) for n in div]
+
+    for x in div:
+        for n in range(str):
+            if(i > 255):
+                break
+            histo[i] = x
+            i += 1
+
+    for x in array:
+        for n in x:
+            n[0] = histo[n[0]]
+            n[1] = n[0]
+            n[2] = n[0]
+    
+    return array
+            
 
 
 
@@ -62,12 +352,20 @@ def output(directory, image):
 
 
 def main():
-    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/let51.BMP"
+    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/svar01.BMP"
     im_org = Image.open(path)
 
-    #input(cfg.config['DEFAULT']['directory'])
+    arr = pixel_val_grey(im_org)
+    hist = histo_one(arr)
+    image = histo_quant(arr, hist, 75)
 
-    output(('/Users/Adhsketch/Desktop/repos/ImageAnalysis/files'), im_org)
+    Image.fromarray(image).save("NI.BMP")
+    #input(cfg.config['DEFAULT']['directory'])
+    #config()
+
+
+
+    print(timeSheet)
 
 if __name__ == "__main__":
     main()   
