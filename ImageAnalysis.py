@@ -28,19 +28,10 @@ def intp(image, histo):
             n[2] = n[0]
     return image
 
-def median(l):
-    if len(l)%2 != 0:
-       return l[round(len(l)/2)]
-    else:
-        return int((l[int(len(l)//2)] + l[int(len(l)//2 + 1)])//2)
-
-def mean(l):
-  pass
-
 def msqe(qArray, rArray):
     num = 0
-    for x in len(rArray):
-        num += np.square(rArray - qArray)
+    for x in range(len(rArray)):
+        num += np.square(rArray[x] - qArray[x])
     return num/len(rArray)
 
 #Set-up
@@ -73,9 +64,9 @@ def output(directory):
         ver = 0           
 
 def TimeSheet(directory):
-    df = pd.DataFrame.from_dict(timeSheet, orient='index')
-    df.columns['para', 'cyl', 'super', 'inter', 'let', 'mod', 'svar', 'total', 'average']
-    df.csv(directory + 'TimeSheet.csv')
+    df = pd.DataFrame.from_dict(timeSheet,orient='index')
+    #df.columns['name': 'para', 'cyl', 'super', 'inter', 'let', 'mod', 'svar', 'total', 'average']
+    df.to_csv(directory + 'TimeSheet.csv')
 
 def HistoPrint(directory):
     cat = 0
@@ -242,29 +233,39 @@ def config():
         timeSheet['Equal'].append(total)
         timeSheet['Equal'].append(total/499)
 
-
-
     if(cfg.config['DEFAULT']['histo_quant'] == 'True'):
         timeSheet['Quant'] = []
         total = 0
         oArrays = arrayTotal
-        print(arrayTotal)
         for x in range(len(arrayTotal)):
             t = perf_counter()
-            print(len(arrayTotal))
             for y in range(len(arrayTotal[x])):
-                arrayTotal[x][y] = histo_quant(arrayTotal[x][y], histoTotal[x][y])
+                arrayTotal[x][y] = histo_quant(arrayTotal[x][y], histo_one(arrayTotal[x][y]))
             total += (perf_counter() - t)
             timeSheet['Quant'].append((perf_counter() - t))
 
         timeSheet['Quant'].append(total)
         timeSheet['Quant'].append(total/499)     
 
+        print(timeSheet)
+
         for x in range(len(arrayTotal)):
             for n in range(len(arrayTotal[x])):
                 MSQE[x][n] = msqe(arrayTotal,oArrays)
 
+    if(cfg.config['DEFAULT']['MFilter'] == 'True'):
+        timeSheet['MFilter'] = []
+        total = 0
+        oArrays = arrayTotal
+        for x in range(len(arrayTotal)):
+            t = perf_counter()
+            for y in range(len(arrayTotal[x])):
+                arrayTotal[x][y] = MFilter(arrayTotal[x][y], cfg.config['SETTINGS']['MFilter'])
+            total += (perf_counter() - t)
+            timeSheet['MFilter'].append((perf_counter() - t))
 
+        timeSheet['MFilter'].append(total)
+        timeSheet['MFilter'].append(total/499)
 
     if(cfg.config['DEFAULT']['histo_avg'] == 'True'):
         timeSheet['HistoAVG'] = []
@@ -445,41 +446,69 @@ def histo_quant(array, histo, str = 25):
     return array
 
 #Filters           
-def MFilter(array, image, size = 1, str = 1):
-    w,h = image.size
-    nArray = array
-    l = []
-    med = 0
-    j = 0
-    i = 0
+def MFilter(array,median_filter = [[1, 2, 1],[2, 3, 2],[1, 2, 1]]):
+    image_width, image_height = array.shape[1], array.shape[0]
+    nArray = array.copy()
 
-    for n in array:
-        for x in n:
-            row, col = j , i
+    for y in range(array.shape[0]):
+        for x in range(array.shape[1]):
+            # Get Image Filter Pixels
+            filter_mid = len(median_filter)//2
 
-            x = np.arange(max(col-size, 0), min(col + size +1, w))
-            y = np.arange(max(col-size, 0), min(col + size +1, h))
+            # Skip Border Pixels
+            if x-filter_mid < 0 or x+filter_mid > image_width: continue
+            if y-filter_mid < 0 or y+filter_mid > image_height: continue
+            filter_pixels = array[y-filter_mid:y+filter_mid+1,x-filter_mid:x+filter_mid+1]
 
-            X,Y = np.meshgrid(x,y)
+            # Apply Median Spatial Filter Over Greyscale Image
+            # Store First Element (Pixel Value) In Fitler Pixel Row, Since
+            #   They're All The Same Value (Greyscale Image)
+            pixels = []
 
-            nbh = np.sqrt(((X-col)**2 + (Y-row)**2))
+            for filter_x, rgb_pixel_values in enumerate(filter_pixels):
+                for filter_y, rgb_values in enumerate(rgb_pixel_values):
+                    pixel_weight = median_filter[filter_y][filter_x]
+                    pixel_value  = rgb_values[0]
+                    pixels.extend([pixel_value for _ in range(pixel_weight)])
 
+            # Fetch Median Pixel Value Within Filter And Set New Image Pixel At (y,x) To New Median Value
+            if len(pixels) > 1:
+                pixels.sort()
+                median = pixels[len(pixels)//2] if len(pixels) % 2 == 0 else pixels[len(pixels)//2+1]
+                nArray[y][x][0] = median
+                nArray[y][x][1] = nArray[y][x][0]
+                nArray[y][x][2] = nArray[y][x][0]
 
-            m = (nbh < size)
-            print((Y[m] * w)+ X[m])
-            for k in range(len(Y[m])):
-                #print(len(array[0][Y[m][k]][X[m][k]]))
-                l.append(array[Y[m][k]][X[m][k]])
+    return nArray
 
-            print(i)
-            med = median(np.sort(l))
-            nArray[j][i][0] = nArray[j][i][0] + round(med *(s/100))
-            nArray[j][i][1] = nArray[j][i][0]
-            nArray[j][i][2] = nArray[j][i][0]
-            l = []
-            i +=1
-        j +=1
-        i = 0
+def LFilter(array,  mean_filter = [[4, 5, 4],[5, 6, 5],[4, 5, 4]]):
+    image_width, image_height = array.shape[1], array.shape[0]
+    nArray = array.copy()
+
+    for y in range(array.shape[0]):
+        for x in range(array.shape[1]):
+            # Get Image Filter Pixels
+            filter_mid = len(mean_filter)//2
+
+            # Skip Border Pixels
+            if x-filter_mid < 0 or x+filter_mid > image_width: continue
+            if y-filter_mid < 0 or y+filter_mid > image_height: continue
+            filter_pixels = array[y-filter_mid:y+filter_mid+1,x-filter_mid:x+filter_mid+1]
+            pixels = []
+
+            for filter_x, rgb_pixel_values in enumerate(filter_pixels):
+                for filter_y, rgb_values in enumerate(rgb_pixel_values):
+                    pixel_weight = mean_filter[filter_y][filter_x]
+                    pixel_value  = rgb_values[0]
+                    pixels.extend([pixel_value for _ in range(pixel_weight)])
+
+            # Fetch Mean of Pixel Value Within Filter And Set New Image Pixel At (y,x) To New Median Value
+            if len(pixels) > 1:
+                mean = int(round(np.mean(pixels)))
+                nArray[y][x][0] = mean
+                nArray[y][x][1] = nArray[y][x][0]
+                nArray[y][x][2] = nArray[y][x][0]
+
     return nArray
 
 
@@ -487,12 +516,11 @@ def MFilter(array, image, size = 1, str = 1):
 
 
 
-
-
 def main():
-    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/svar01.BMP"
-    im_org = Image.open(path)
-
+    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/inter01.BMP"
+    #im_org = Image.open(path)
+    HistList = []
+    ArrayList = []
     #arr = pixel_val_grey(im_org)
     #arr = negative(arr)
     #hist = histo_one(arr)
@@ -502,21 +530,25 @@ def main():
 
     #image = histo_quant(arr, hist, 75)
 
-    '''MFilter(arr, im_org, 2, 2)'''
+    #image = snp(arr, str = 25)
 
+    #image = LFilter(arr)
 
+    
     #Image.fromarray(image).save("NI.BMP")
     input(cfg.config['DEFAULT']['directory'])
     config()
 
-    TimeSheet(cfg.config['DEFAULT']['directory'] + 'TimeSheet')
+    TimeSheet(cfg.config['DEFAULT']['directory'])
 
     #output(cfg.config['DEFAULT']['directory'])
 
 
     #HistoPrint(cfg.config['DEFAULT']['directory'])
-    
-    #print(MSQE)
+    df = pd.DataFrame(MSQE)
+    df.to_csv(directory + 'MSQE.csv')
+
+    print(MSQE)
     print(timeSheet)
 
 if __name__ == "__main__":
