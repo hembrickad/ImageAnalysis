@@ -128,16 +128,51 @@ def config():
             im_arr = []
 
             total += (perf_counter() - t)
-            timeSheet['grey'].append((perf_counter() - t))
+            timeSheet['color'].append((perf_counter() - t))
 
         timeSheet['color'].append(total)
         timeSheet['color'].append(total/499)
+
+    if(cfg.config['DEFAULT']['binary'] == 'True'):
+        timeSheet['binary'] = []
+        total = 0
+
+        for x in arrayTotal:
+            t = perf_counter()
+            for n in x:
+                im_arr.append(binary(n))
+            arrayTotal.append(im_arr.copy())
+            im_arr = []
+
+            total += (perf_counter() - t)
+            timeSheet['binary'].append((perf_counter() - t))
+
+        timeSheet['binary'].append(total)
+        timeSheet['binary'].append(total/499)
+
+    if(cfg.config['DEFAULT']['negative'] == 'True'):   
+        timeSheet['negative'] = []
+        total = 0
+
+        for x in arrayTotal:
+            t = perf_counter()
+            for n in x:
+                im_arr.append(negative(n))
+            arrayTotal.append(im_arr.copy())
+            im_arr = []
+
+            total += (perf_counter() - t)
+            timeSheet['negative'].append((perf_counter() - t))
+
+        timeSheet['negative'].append(total)
+        timeSheet['negative'].append(total/499)
+
 
     if(cfg.config['DEFAULT']['histo_one'] == 'True'):
         timeSheet['histo'] = []
         total = 0
 
-        for x in cells:
+        for x in arrayTotal:
             t = perf_counter()
             for n in x:
                 histo.append(histo_one(n))
@@ -214,7 +249,6 @@ def config():
         total = 0
         oArrays = arrayTotal
         print(arrayTotal)
-        print(histoTotal)
         for x in range(len(arrayTotal)):
             t = perf_counter()
             print(len(arrayTotal))
@@ -286,6 +320,28 @@ def pixel_val_color(image, channel = "r"):
                 n[0] = 0
                 n[2] = 0
     return array
+
+def binary(array, str = 127):
+    for x in array:
+        for n in x:
+            if n[0] >=127:
+                n[0] = 255
+                n[1] = 255
+                n[2] = 255
+            else:
+                n[0] = 0
+                n[1] = 0
+                n[2] = 0
+    return array
+
+def negative(array):
+    for x in array:
+        for n in x:
+            n[0] = 255 - n[0]
+            n[1] = 255 - n[1]
+            n[2] = 255 - n[2]
+    return array
+
 
 #Noise
 def snp(array, str = 10):
@@ -387,7 +443,8 @@ def histo_quant(array, histo, str = 25):
             n[2] = n[0]
     
     return array
-            
+
+#Filters           
 def MFilter(array, image, size = 1, str = 1):
     w,h = image.size
     nArray = array
@@ -395,8 +452,6 @@ def MFilter(array, image, size = 1, str = 1):
     med = 0
     j = 0
     i = 0
-
- 
 
     for n in array:
         for x in n:
@@ -439,7 +494,12 @@ def main():
     im_org = Image.open(path)
 
     #arr = pixel_val_grey(im_org)
+    #arr = negative(arr)
     #hist = histo_one(arr)
+
+
+    #Image.fromarray(arr).save( "NI.BMP")   
+
     #image = histo_quant(arr, hist, 75)
 
     '''MFilter(arr, im_org, 2, 2)'''
@@ -449,14 +509,14 @@ def main():
     input(cfg.config['DEFAULT']['directory'])
     config()
 
-    #TimeSheet(cfg.['DEFAULT']['directory'] + 'TimeSheet')
+    TimeSheet(cfg.config['DEFAULT']['directory'] + 'TimeSheet')
 
     #output(cfg.config['DEFAULT']['directory'])
 
 
     #HistoPrint(cfg.config['DEFAULT']['directory'])
     
-    print(MSQE)
+    #print(MSQE)
     print(timeSheet)
 
 if __name__ == "__main__":

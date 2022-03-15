@@ -409,8 +409,8 @@ def main():
     total= 0
     HistoList = []
     im_arr = []
-    print(cfg.config['DEFAULT']['pixel_val_grey'])
-    #input(cfg.config['DEFAULT']['directory'])
+    #print(cfg.config['DEFAULT']['pixel_val_grey'])
+    input(cfg.config['DEFAULT']['directory'])
     config()
 
     pd.Dataframe.from_dict(timeSheet)

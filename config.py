@@ -6,6 +6,8 @@ config['DEFAULT'] = {'directory': '/Users/Adhsketch/Desktop/repos/ImageAnalysis/
 'histo_one':'True',
 'histo_avg':'False',
 'pixel_val_color': 'False',
+'binary': 'True',
+'negative': 'True',
 'snp':'False',
 'gausNoise':'False',
 'speckle': 'False',
