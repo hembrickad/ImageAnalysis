@@ -253,18 +253,18 @@ def config():
                 MSQE[x][n] = msqe(arrayTotal,oArrays)
 
     if(cfg.config['DEFAULT']['MFilter'] == 'True'):
-        timeSheet['MFilter'] = []
+        timeSheet['LFilter'] = []
         total = 0
         oArrays = arrayTotal
         for x in range(len(arrayTotal)):
             t = perf_counter()
             for y in range(len(arrayTotal[x])):
-                arrayTotal[x][y] = MFilter(arrayTotal[x][y], cfg.config['SETTINGS']['MFilter'])
+                arrayTotal[x][y] = LFilter(arrayTotal[x][y], cfg.config['SETTINGS']['MFilter'])
             total += (perf_counter() - t)
-            timeSheet['MFilter'].append((perf_counter() - t))
+            timeSheet['LFilter'].append((perf_counter() - t))
 
-        timeSheet['MFilter'].append(total)
-        timeSheet['MFilter'].append(total/499)
+        timeSheet['LFilter'].append(total)
+        timeSheet['LFilter'].append(total/499)
         print(timeSheet)
 
     if(cfg.config['DEFAULT']['histo_avg'] == 'True'):
@@ -531,25 +531,15 @@ def LFilter(array, mean_filter = [[1, 1,1],[1, 1, 1],[1, 1, 1]]):
 
 
 def main():
-    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/Peppers.png"
+    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/svar01.BMP"
     im_org = Image.open(path)
-    HistList = []
-    ArrayList = []
     arr = pixel_val_grey(im_org)
-    #arr = negative(arr)
-    #hist = histo_one(arr)
 
-
-    #Image.fromarray(arr).save( "NI.BMP")   
-
-    #image = histo_quant(arr, hist, 75)
-
-    #image = snp(arr, str = 25)
 
     image = LFilter(arr)
 
     
-    Image.fromarray(image).save("NI.png")
+    Image.fromarray(image).save("NI.BMP")
     #input(cfg.config['DEFAULT']['directory'])
     #config()
 
