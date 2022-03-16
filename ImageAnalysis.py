@@ -481,7 +481,7 @@ def MFilter(array,median_filter = [[1, 2, 1],[2, 3, 2],[1, 2, 1]]):
 
     return nArray
 
-def LFilter(array, mean_filter = [[1, 1, 1],[1, 1, 1],[1, 1, 1]]):
+def LFilter(array, mean_filter = [[1, 1,1],[1, 1, 1],[1, 1, 1]]):
     nArray = array.copy()
 
     image_width, image_height = array.shape[1],array.shape[0]
@@ -531,7 +531,7 @@ def LFilter(array, mean_filter = [[1, 1, 1],[1, 1, 1],[1, 1, 1]]):
 
 
 def main():
-    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/cyl01.BMP"
+    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/Peppers.png"
     im_org = Image.open(path)
     HistList = []
     ArrayList = []
@@ -549,7 +549,7 @@ def main():
     image = LFilter(arr)
 
     
-    Image.fromarray(image).save("NI.BMP")
+    Image.fromarray(image).save("NI.png")
     #input(cfg.config['DEFAULT']['directory'])
     #config()
 
