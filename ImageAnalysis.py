@@ -253,6 +253,21 @@ def config():
                 MSQE[x][n] = msqe(arrayTotal,oArrays)
 
     if(cfg.config['DEFAULT']['MFilter'] == 'True'):
+        timeSheet['MFilter'] = []
+        total = 0
+        oArrays = arrayTotal
+        for x in range(len(arrayTotal)):
+            t = perf_counter()
+            for y in range(len(arrayTotal[x])):
+                arrayTotal[x][y] = MFilter(arrayTotal[x][y], cfg.config['SETTINGS']['MFilter'])
+            total += (perf_counter() - t)
+            timeSheet['MFilter'].append((perf_counter() - t))
+
+        timeSheet['MFilter'].append(total)
+        timeSheet['MFilter'].append(total/499)
+        print(timeSheet)
+
+    if(cfg.config['DEFAULT']['LFilter'] == 'True'):
         timeSheet['LFilter'] = []
         total = 0
         oArrays = arrayTotal
@@ -342,7 +357,6 @@ def negative(array):
             n[1] = 255 - n[1]
             n[2] = 255 - n[2]
     return array
-
 
 #Noise
 def snp(array, str = 10):
@@ -531,17 +545,9 @@ def LFilter(array, mean_filter = [[1, 1,1],[1, 1, 1],[1, 1, 1]]):
 
 
 def main():
-    path = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/svar01.BMP"
-    im_org = Image.open(path)
-    arr = pixel_val_grey(im_org)
 
-
-    image = LFilter(arr)
-
-    
-    Image.fromarray(image).save("NI.BMP")
-    #input(cfg.config['DEFAULT']['directory'])
-    #config()
+    input(cfg.config['DEFAULT']['directory'])
+    config()
 
     #TimeSheet(cfg.config['DEFAULT']['directory'])
 

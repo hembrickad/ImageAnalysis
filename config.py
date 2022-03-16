@@ -12,8 +12,8 @@ config['DEFAULT'] = {'directory': '/Users/Adhsketch/Desktop/repos/ImageAnalysis/
 'gausNoise':'False',
 'speckle': 'False',
 'histo_equal':'False',
-'histo_quant':'True',
-'LFilter':'False',
+'histo_quant':'False',
+'LFilter':'True',
 'MFilter':'False'
 }
 config['SETTINGS'] = {'pixel_val_grey': 'k',
@@ -22,6 +22,6 @@ config['SETTINGS'] = {'pixel_val_grey': 'k',
 'gausNoise':'25',
 'speckle':'25',
 'histo_quant':'2',
-'LFilter':'[[1, 2, 1],[2, 3, 2],[1, 2, 1]]',
+'LFilter':'[[1, 1,1],[1, 1, 1],[1, 1, 1]]',
 'MFilter':'[[1, 2, 1],[2, 3, 2],[1, 2, 1]]'
 }
