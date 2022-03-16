@@ -547,18 +547,15 @@ def main():
     input(cfg.config['DEFAULT']['directory'])
     config()
 
-    #TimeSheet(cfg.config['DEFAULT']['directory'])
+    TimeSheet(cfg.config['DEFAULT']['directory'])
 
-    #output(cfg.config['DEFAULT']['directory'])
+    output(cfg.config['DEFAULT']['directory'])
 
 
-    #HistoPrint(cfg.config['DEFAULT']['directory'])
+    HistoPrint(cfg.config['DEFAULT']['directory'])
 
     df = pd.DataFrame(MSQE)
     df.to_csv(cfg.config['DEFAULT']['directory'] + 'MSQE.csv')
-
-    #print(MSQE)
-    #print(timeSheet)
 
 if __name__ == "__main__":
     main()   
