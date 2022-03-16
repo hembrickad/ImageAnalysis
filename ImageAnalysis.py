@@ -255,11 +255,10 @@ def config():
     if(cfg.config['DEFAULT']['MFilter'] == 'True'):
         timeSheet['MFilter'] = []
         total = 0
-        oArrays = arrayTotal
-        for x in range(len(arrayTotal)):
+        for x in arrayTotal:
             t = perf_counter()
-            for y in range(len(arrayTotal[x])):
-                arrayTotal[x][y] = MFilter(arrayTotal[x][y], cfg.config['SETTINGS']['MFilter'])
+            for y in x:
+                y = MFilter(y, cfg.config['SETTINGS']['MFilter'])
             total += (perf_counter() - t)
             timeSheet['MFilter'].append((perf_counter() - t))
 
@@ -270,11 +269,10 @@ def config():
     if(cfg.config['DEFAULT']['LFilter'] == 'True'):
         timeSheet['LFilter'] = []
         total = 0
-        oArrays = arrayTotal
-        for x in range(len(arrayTotal)):
+        for x in arrayTotal:
             t = perf_counter()
-            for y in range(len(arrayTotal[x])):
-                arrayTotal[x][y] = LFilter(arrayTotal[x][y], cfg.config['SETTINGS']['MFilter'])
+            for y in x:
+                y = LFilter(y, cfg.config['SETTINGS']['MFilter'])
             total += (perf_counter() - t)
             timeSheet['LFilter'].append((perf_counter() - t))
 
