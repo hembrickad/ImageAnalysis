@@ -248,8 +248,6 @@ def config():
         timeSheet['Quant'].append(total)
         timeSheet['Quant'].append(total/499)     
 
-        print(timeSheet)
-
         for x in range(len(arrayTotal)):
             for n in range(len(arrayTotal[x])):
                 MSQE[x][n] = msqe(arrayTotal,oArrays)
@@ -483,38 +481,49 @@ def MFilter(array,median_filter = [[1, 2, 1],[2, 3, 2],[1, 2, 1]]):
 
     return nArray
 
-def LFilter(array,  mean_filter = [[.1, 0, .1],[.1, 0, .1],[.1, 0, .1]]):
-    image_width, image_height = array.shape[1], array.shape[0]
+def LFilter(array, mean_filter = [[1, 1, 1],[1, 1, 1],[1, 1, 1]]):
     nArray = array.copy()
+
+    image_width, image_height = array.shape[1],array.shape[0]
+
+    # Compute New Pixel Value
+    filter_mid_y = len(mean_filter)//2
+    filter_mid_x = len(mean_filter[0])//2
 
     for y in range(array.shape[0]):
         for x in range(array.shape[1]):
-            # Get Image Filter Pixels
-            filter_mid_y = len(mean_filter)//2
-            filter_mid_x = len(mean_filter[0])//2
-
             # Skip Border Pixels
             if x-filter_mid_x < 0 or x+filter_mid_x > image_width : continue
             if y-filter_mid_y < 0 or y+filter_mid_y > image_height: continue
+
             filter_pixels = array[y-filter_mid_y:y+filter_mid_y+1,x-filter_mid_x:x+filter_mid_x+1]
 
-            new_pixel_val = 0
+            # Apply Spatial Filter Over Greyscale Image
+            # Only Use First Element (Pixel Value) In Filter Pixel Row, Since
+            #   They're All The Same Value (Greyscale Image)
+            new_pixel_val, non_zero_count = 0, 0
 
             for filter_y, rgb_pixel_values in enumerate(filter_pixels):
                 for filter_x, rgb_values in enumerate(rgb_pixel_values):
                     pixel_weight = mean_filter[filter_y][filter_x]
                     pixel_value  = rgb_values[0]
                     new_pixel_val += pixel_weight * pixel_value
+                    if pixel_weight != 0: non_zero_count += 1
+            
+            # Compute Average Pixel Value
+            new_pixel_val /= non_zero_count
 
+            # Check(s)
             if new_pixel_val < 0  : new_pixel_val = 0
             if new_pixel_val > 255: new_pixel_val = 255
 
-            # Fetch Mean of Pixel
+            # Set New Pixel Value
             nArray[y][x][0] = new_pixel_val
             nArray[y][x][1] = nArray[y][x][0]
             nArray[y][x][2] = nArray[y][x][0]
 
     return nArray
+
 
 
 
@@ -537,12 +546,12 @@ def main():
 
     #image = snp(arr, str = 25)
 
-    #image = LFilter(arr)
+    image = LFilter(arr)
 
     
-    #Image.fromarray(image).save("NI.BMP")
-    input(cfg.config['DEFAULT']['directory'])
-    config()
+    Image.fromarray(image).save("NI.BMP")
+    #input(cfg.config['DEFAULT']['directory'])
+    #config()
 
     #TimeSheet(cfg.config['DEFAULT']['directory'])
 
