@@ -338,7 +338,7 @@ def pixel_val_color(image, channel = "r"):
 def binary(array, str = 127):
     for x in array:
         for n in x:
-            if n[0] >=127:
+            if n[0] >= str:
                 n[0] = 255
                 n[1] = 255
                 n[2] = 255
@@ -535,10 +535,6 @@ def LFilter(array, mean_filter = [[1, 1,1],[1, 1, 1],[1, 1, 1]]):
             nArray[y][x][2] = nArray[y][x][0]
 
     return nArray
-
-
-
-
 
 
 
