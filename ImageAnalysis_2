@@ -210,7 +210,7 @@ def Edge_Detec2():
 ## Segmentation ##
 
 #Balanced--Complete
-def balanced(array, minCount = 100):
+def balanced(array, minCount = 1800):
     array = p1.LFilter(array)
     histo = p1.histo_one(array)
 
@@ -257,7 +257,7 @@ def balanced(array, minCount = 100):
     return array
 
 #Otsu
-def Thresh_otsu(array, min = 5500):
+def Thresh_otsu(array, min = 10000):
     array = p1.LFilter(array)
     histo = p1.histo_one(array)
     tot = array.shape[1] * array.shape[0]
@@ -327,7 +327,7 @@ def clustering(im, k, max):
 
 #"/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/mod01.BMP"
 def main():
-    directory = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/let51.BMP"
+    directory = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/svar01.BMP"
     im_org = Image.open(directory)
 
     
