@@ -200,8 +200,26 @@ def Dilation(array, mean_filter = [[1,0,1],[1, 1, 1],[0, 1, 0]] ):
 
     return nArray
 
-def Edge_Detec1():
-    pass
+def Edge_Detec1(array):
+    EArray = Erosion(array)
+    DArray = Dilation(array)
+    row = 0
+
+    for x in array:
+        for y in range(len(x)):
+            if EArray[row,y,0] == DArray[row,y,0]:
+                x[y,0] = 0
+                x[y,1] = 0
+                x[y,2] = 0
+            else:
+                x[y,0] = 255
+                x[y,1] = 255
+                x[y,2] = 255
+        row +=1
+    return array
+
+
+    
 
 def Edge_Detec2():
     pass
@@ -256,7 +274,7 @@ def balanced(array, minCount = 1800):
                 n[2] = n[0]
     return array
 
-#Otsu
+#Otsu--Complete
 def Thresh_otsu(array, min = 10000):
     array = p1.LFilter(array)
     histo = p1.histo_one(array)
@@ -301,8 +319,7 @@ def Thresh_otsu(array, min = 10000):
         return array
 
 
-
-
+##Clustering##
 def clustering(im, k, max):
     pixel_values = im.reshape((-1, 3))
     pixel_values = np.float32(im)
@@ -325,9 +342,9 @@ def clustering(im, k, max):
 
 
 
-#"/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/mod01.BMP"
+#"/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/let51.BMP"
 def main():
-    directory = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/svar01.BMP"
+    directory = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/let51.BMP"
     im_org = Image.open(directory)
 
     
@@ -335,14 +352,14 @@ def main():
     arr = p1.pixel_val_grey(im_org)
     #clustering(arr,3, 100)
     hist = p1.histo_one(arr)
+    #arr = Edge_Detec1(arr)
+
 
     #arr = balanced(arr)
 
-
-   # arr = otsu2(arr,hist)
-    #arr = p1.histo_equal(arr,hist)
+    arr = p1.histo_equal(arr,hist)
     #hist = p1.histo_one(arr)
-    arr = Thresh_otsu(arr)
+    #arr = Thresh_otsu(arr)
 
     #arr = p1.binary(arr,t)
     Image.fromarray(arr).save("NI.BMP")
