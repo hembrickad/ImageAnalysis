@@ -204,7 +204,7 @@ def Border_Detect(array):
 
 #Scharr -- Complete
 def Scharr(array):
-    array = p1.MFilter(array)
+    #array = p1.MFilter(array)
     Lapfilter = [[ -3,0,3],[ -10,0,10],[-3,0,3]]
     nArray = array.copy()
     image_width, image_height = array.shape[1], array.shape[0]
@@ -408,19 +408,19 @@ def clustering(im, k, max):
 
 #"/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/let51.BMP"
 def main():
-    directory = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/inter01.BMP"
+    directory = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/cyl01.BMP"
     im_org = Image.open(directory)
-    #arr = np.array(im_org)
+    arr = np.array(im_org)
     
 
-    arr = p1.pixel_val_grey(im_org)
-    #clustering(arr, 3, 100)
-    arr = Scharr(arr)
+    #arr = p1.pixel_val_grey(im_org)
+    clustering(arr, 3, 100)
+    #arr = Scharr(arr)
 
     #hist = p1.histo_one(arr)
 
     #arr = p1.binary(arr,t)
-    Image.fromarray(arr).save("NI.BMP")
+    #Image.fromarray(arr).save("NI.BMP")
 
 if __name__ == "__main__":
     main()   
