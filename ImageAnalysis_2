@@ -408,7 +408,7 @@ def clustering(im, k, max):
 
 #"/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/let51.BMP"
 def main():
-    directory = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/cyl01.BMP"
+    directory = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/super01.BMP"
     im_org = Image.open(directory)
     arr = np.array(im_org)
     
