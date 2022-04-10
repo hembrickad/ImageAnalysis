@@ -7,114 +7,94 @@ from PIL import Image
 from random import randint     
 import matplotlib.pyplot as plt
 from time import perf_counter
-# Niblack
+
 def eDist(x, y):
     return np.sqrt(np.sum((x-y)**2))
 
 class KMeans():
-    def __init__(self, K=5, max_iters=100, plot=False):
-        self.K = K
-        self.max_iters = max_iters
-        self.plot = plot
-
-        self.clusters = [[] for _ in range(self.K)]
+    def __init__(self, k=5, iters=100, steps=False):
+        self.k = k
+        self.iters = iters
+        self.steps = steps
+        # list of sample indices for each cluster
+        self.clusters = [[] for _ in range(self.k)]
+        # the centers (mean feature vector) for each cluster
         self.centroids = []
-
-    def pred(self, x):
-        self.x = x
-        self.nSamples, self.nFeatures = x.shape[0], x.shape[1]
-
-        sampleIDs = np.random.choice(self.nSamples, self.K, replace=False)
-        self.centroids = [self.x[id] for id in sampleIDs]
-
-        for _ in range(self.max_iters):
-            self.clusters = self.create(self.centroids)
-            if self.plot:
+   
+    def predict(self, X):
+        self.X = X
+        self.numSamples, self.numFeatures = X.shape
+        
+        # initialize 
+        random_sample_idxs = np.random.choice(self.numSamples, self.k, replace=False)
+        self.centroids = [self.X[idx] for idx in random_sample_idxs]
+        # Optimize clusters
+        for _ in range(self.iters):
+            # Assign samples to closest centroids (create clusters)
+            self.clusters = self.createClusters(self.centroids)
+            if self.steps:
                 self.plot()
+            # Calculate new centroids from the clusters
+            centroidsOld = self.centroids
+            self.centroids = self.getCentroids(self.clusters)
             
-            centroids_old = self.centroids
-            self.centroids = self.getCent(self.clusters)
-
-            if self.converged(centroids_old, self.centroids):
+            # check if clusters have changed
+            if self.converged(centroidsOld, self.centroids):
                 break
-
-            if self.plot:
+            if self.steps:
                 self.plot()
-
-            return self.getLClusters(self.clusters)
-
-    def getLClusters(self, clusters):
-        l = np.empty(self.nSamples)
-
-        for clusterID, cluster in enumerate(clusters):
-            for sampleID in cluster:
-                l[sampleID] = clusterID
+        # Classify samples as the index of their clusters
+        return self.getLabels(self.clusters)
+   
+    def getLabels(self, clusters):
+        # each sample will get the label of the cluster it was assigned to
+        labels = np.empty(self.numSamples)
+        for cluster_idx, cluster in enumerate(clusters):
+            for sample_index in cluster:
+                labels[sample_index] = cluster_idx
         return labels
-
-    def create(self, centroids):
-        clusters = [[] for _ in range(self.K)]
-        for id, sample in enumerate(self.x):
-            centroidID = self.closest(sample,centroids)
-            clusters[centroidID].append(id)
+   
+    def createClusters(self, centroids):
+        # Assign the samples to the closest centroids to create clusters
+        clusters = [[] for _ in range(self.k)]
+        for idx, sample in enumerate(self.X):
+            centroid_idx = self.closestCentroid(sample, centroids)
+            clusters[centroid_idx].append(idx)
         return clusters
-
-    def getCent(self, clusters):
-        centroids = np.zeros((self.K, self.nFeatures))
-        for clusterID, cluster in enumerate(clusters):
-            clusterMean = np.mean(self.x[cluster], axis=0)
-            centroids[clusterID] = clusterMean
-        return centroids
-
-    def closest(self,sample,centroids):
+   
+    def closestCentroid(self, sample, centroids):
+        # distance of the current sample to each centroid
         dist = [eDist(sample, p) for p in centroids]
-        closestInd = np.argmin(dist)
-        return closestInd
+        closest_index = np.argmin(dist)
+        return closest_index
+   
+    def getCentroids(self, clusters):
+        # assign mean value of clusters to centroids
+        centroids = np.zeros((self.k, self.numFeatures))
+        for cluster_idx, cluster in enumerate(clusters):
+            clusterMean = np.mean(self.X[cluster], axis=0)
+            centroids[cluster_idx] = clusterMean
+        return centroids
     
-    def converged(self, oldCentroids, centroids):
-        dist = [eDist(oldCentroids[i], centroids[i])for i in range(self.K)]
-        s = sum(dist)
-        return s ==0
-
+    def converged(self, centroidsOld, centroids):
+        # distances between each old and new centroids, fol all centroids
+        dist = [eDist(centroidsOld[i], centroids[i]) for i in range(self.k)]
+        return sum(dist) == 0
+    
     def plot(self):
-        fig, ax = plt.subplots(figsize = (12,8))
-
+        fig, ax = plt.subplots(figsize=(12, 8))
         for i, index in enumerate(self.clusters):
-            point = self.x[index].T
-            ax.scatter(*point)
-
-        for point in self.centroids:
-            ax.scatter(*point, marker = "X", color = "black", linewidth = 3)
+            p = self.X[index].T
+            ax.scatter(*p)
+        for p in self.centroids:
+            ax.scatter(*p, marker="x", color='black', linewidth=2)
         plt.show()
-
+    
     def cent(self):
         return self.centroids
 
-
-def binary_c(array, r = 120, g = 100, b = 150):
-    array = np.array(array)
-    for x in array:
-        for n in x:
-            if n[0] >=r:
-                n[0] = 255
-            else:
-                n[0] = 0
-            if n[1] >=g:
-                n[1] = 255
-            else:
-                n[1] = 0
-            if n[2] >=b:
-                n[2] = 255
-            else:
-                n[2] = 0
-    return array
-
-#def Laplacian(array, filter = [[ 0 1 0],[ 1,-4,1],[0,1,0]]):
-
-
-
-
 #Erosion--Complete
-def Erosion(array, median_filter = [[0, 1, 0],[1, 1, 1],[0, 1, 0]]):
+def Erosion(array, Efilter = [[0, 1, 0],[1, 1, 1],[0, 1, 0]]):
 
     array = p1.binary(array)
 
@@ -125,7 +105,7 @@ def Erosion(array, median_filter = [[0, 1, 0],[1, 1, 1],[0, 1, 0]]):
     for y in range(array.shape[0]):
         for x in range(array.shape[1]):
             # Get Image Filter Pixels
-            filter_mid = len(median_filter)//2
+            filter_mid = len(Efilter)//2
 
             # Skip Border Pixels
             if x-filter_mid < 0 or x+filter_mid > image_width: 
@@ -137,51 +117,9 @@ def Erosion(array, median_filter = [[0, 1, 0],[1, 1, 1],[0, 1, 0]]):
             # Apply Median Spatial Filter Over Greyscale Image
             # Store First Element (Pixel Value) In Fitler Pixel Row, Since
             #   They're All The Same Value (Greyscale Image)
-            pixels = []
-
-            for filter_x, rgb_pixel_values in enumerate(filter_pixels):
-                for filter_y, rgb_values in enumerate(rgb_pixel_values):
-                    pixel_weight = median_filter[filter_y][filter_x]
-                    pixel_value  = rgb_values[0]
-                    pixels.extend([pixel_value for _ in range(pixel_weight)])
-
-            # Fetch Median Pixel Value Within Filter And Set New Image Pixel At (y,x) To New Median Value
-            if len(pixels) > 1:
-                pixels.sort()
-                median = pixels[len(pixels)//2] if len(pixels) % 2 == 0 else pixels[len(pixels)//2+1]
-                nArray[y][x][0] = median
-                nArray[y][x][1] = nArray[y][x][0]
-                nArray[y][x][2] = nArray[y][x][0]
-
-    return nArray
-
-#Dilation--Complete   
-def Dilation(array, mean_filter = [[1,0,1],[1, 1, 1],[0, 1, 0]] ):
-    array = p1.binary(array)
-    nArray = array.copy()
-
-    image_width, image_height = array.shape[1],array.shape[0]
-
-    # Compute New Pixel Value
-    filter_mid_y = len(mean_filter)//2
-    filter_mid_x = len(mean_filter[0])//2
-
-    for y in range(array.shape[0]):
-        for x in range(array.shape[1]):
-            # Skip Border Pixels
-            if x-filter_mid_x < 0 or x+filter_mid_x > image_width : continue
-            if y-filter_mid_y < 0 or y+filter_mid_y > image_height: continue
-
-            filter_pixels = array[y-filter_mid_y:y+filter_mid_y+1,x-filter_mid_x:x+filter_mid_x+1]
-
-            # Apply Spatial Filter Over Greyscale Image
-            # Only Use First Element (Pixel Value) In Filter Pixel Row, Since
-            #   They're All The Same Value (Greyscale Image)
-            new_pixel_val, non_zero_count = 0, 0
-
             for filter_y, rgb_pixel_values in enumerate(filter_pixels):
                 for filter_x, rgb_values in enumerate(rgb_pixel_values):
-                    pixel_weight = mean_filter[filter_y][filter_x]
+                    pixel_weight = Efilter[filter_y][filter_x]
                     pixel_value  = rgb_values[0]
                     new_pixel_val += pixel_weight * pixel_value
                     if pixel_weight != 0: non_zero_count += 1
@@ -200,7 +138,53 @@ def Dilation(array, mean_filter = [[1,0,1],[1, 1, 1],[0, 1, 0]] ):
 
     return nArray
 
-def Edge_Detec1(array):
+#Dilation--Complete   
+def Dilation(array, Dfilter = [[1,0,1],[1, 1, 1],[0, 1, 0]] ):
+    array = p1.binary(array)
+    nArray = array.copy()
+
+    image_width, image_height = array.shape[1],array.shape[0]
+
+    # Compute New Pixel Value
+    filter_mid_y = len(Dfilter)//2
+    filter_mid_x = len(Dfilter[0])//2
+
+    for y in range(array.shape[0]):
+        for x in range(array.shape[1]):
+            # Skip Border Pixels
+            if x-filter_mid_x < 0 or x+filter_mid_x > image_width : continue
+            if y-filter_mid_y < 0 or y+filter_mid_y > image_height: continue
+
+            filter_pixels = array[y-filter_mid_y:y+filter_mid_y+1,x-filter_mid_x:x+filter_mid_x+1]
+
+            # Apply Spatial Filter Over Greyscale Image
+            # Only Use First Element (Pixel Value) In Filter Pixel Row, Since
+            #   They're All The Same Value (Greyscale Image)
+            new_pixel_val, non_zero_count = 0, 0
+
+            for filter_y, rgb_pixel_values in enumerate(filter_pixels):
+                for filter_x, rgb_values in enumerate(rgb_pixel_values):
+                    pixel_weight = Dfilter[filter_y][filter_x]
+                    pixel_value  = rgb_values[0]
+                    new_pixel_val += pixel_weight * pixel_value
+                    if pixel_weight != 0: non_zero_count += 1
+            
+            # Compute Average Pixel Value
+            new_pixel_val /= non_zero_count
+
+            # Check(s)
+            if new_pixel_val < 0  : new_pixel_val = 0
+            if new_pixel_val > 255: new_pixel_val = 255
+
+            # Set New Pixel Value
+            nArray[y][x][0] = new_pixel_val
+            nArray[y][x][1] = nArray[y][x][0]
+            nArray[y][x][2] = nArray[y][x][0]
+
+    return nArray
+
+#Border Detection --- Complete
+def Border_Detect(array):
     EArray = Erosion(array)
     DArray = Dilation(array)
     row = 0
@@ -218,12 +202,93 @@ def Edge_Detec1(array):
         row +=1
     return array
 
-
+#Scharr -- Complete
+def Scharr(array):
+    array = p1.MFilter(array)
+    Lapfilter = [[ -3,0,3],[ -10,0,10],[-3,0,3]]
+    nArray = array.copy()
+    image_width, image_height = array.shape[1], array.shape[0]
     
+  # Compute New Pixel Value
+    filter_mid_y = len(Lapfilter)//2
+    filter_mid_x = len(Lapfilter[0])//2
 
-def Edge_Detec2():
-    pass
+    for y in range(array.shape[0]):
+        for x in range(array.shape[1]):
+            # Skip Border Pixels
+            if x-filter_mid_x < 0 or x+filter_mid_x > image_width : continue
+            if y-filter_mid_y < 0 or y+filter_mid_y > image_height: continue
 
+            filter_pixels = array[y-filter_mid_y:y+filter_mid_y+1,x-filter_mid_x:x+filter_mid_x+1]
+
+            # Apply Spatial Filter Over Greyscale Image
+            # Only Use First Element (Pixel Value) In Filter Pixel Row, Since
+            #   They're All The Same Value (Greyscale Image)
+            new_pixel_val, non_zero_count = 0, 0
+
+            for filter_y, rgb_pixel_values in enumerate(filter_pixels):
+                for filter_x, rgb_values in enumerate(rgb_pixel_values):
+                    pixel_weight = Lapfilter[filter_y][filter_x]
+                    pixel_value  = rgb_values[0]
+                    new_pixel_val += pixel_weight * pixel_value
+                    if pixel_weight != 0: non_zero_count += 1
+            
+            # Compute Average Pixel Value
+
+            # Check(s)
+            if new_pixel_val < 0  : new_pixel_val = 0
+            if new_pixel_val > 255: new_pixel_val = 255
+
+            # Set New Pixel Value
+            nArray[y][x][0] = new_pixel_val
+            nArray[y][x][1] = nArray[y][x][0]
+            nArray[y][x][2] = nArray[y][x][0]
+
+    return nArray
+
+#Laplacian -- Complete
+def Laplacian(array):
+    array = p1.MFilter(array)
+    Lapfilter = [[ 0, 6, 0],[ 6,-24,6],[0,6,0]]
+    nArray = array.copy()
+    image_width, image_height = array.shape[1], array.shape[0]
+    
+  # Compute New Pixel Value
+    filter_mid_y = len(Lapfilter)//2
+    filter_mid_x = len(Lapfilter[0])//2
+
+    for y in range(array.shape[0]):
+        for x in range(array.shape[1]):
+            # Skip Border Pixels
+            if x-filter_mid_x < 0 or x+filter_mid_x > image_width : continue
+            if y-filter_mid_y < 0 or y+filter_mid_y > image_height: continue
+
+            filter_pixels = array[y-filter_mid_y:y+filter_mid_y+1,x-filter_mid_x:x+filter_mid_x+1]
+
+            # Apply Spatial Filter Over Greyscale Image
+            # Only Use First Element (Pixel Value) In Filter Pixel Row, Since
+            #   They're All The Same Value (Greyscale Image)
+            new_pixel_val, non_zero_count = 0, 0
+
+            for filter_y, rgb_pixel_values in enumerate(filter_pixels):
+                for filter_x, rgb_values in enumerate(rgb_pixel_values):
+                    pixel_weight = Lapfilter[filter_y][filter_x]
+                    pixel_value  = rgb_values[0]
+                    new_pixel_val += pixel_weight * pixel_value
+                    if pixel_weight != 0: non_zero_count += 1
+            
+            # Compute Average Pixel Value
+
+            # Check(s)
+            if new_pixel_val < 0  : new_pixel_val = 0
+            if new_pixel_val > 255: new_pixel_val = 255
+
+            # Set New Pixel Value
+            nArray[y][x][0] = new_pixel_val
+            nArray[y][x][1] = nArray[y][x][0]
+            nArray[y][x][2] = nArray[y][x][0]
+
+    return nArray
 
 ## Segmentation ##
 
@@ -319,47 +384,40 @@ def Thresh_otsu(array, min = 10000):
         return array
 
 
-##Clustering##
+##Clustering## --Complete
 def clustering(im, k, max):
     pixel_values = im.reshape((-1, 3))
-    pixel_values = np.float32(im)
-    print(pixel_values.shape)
+    pixel_values = np.float32(pixel_values)
+    #print(pixel_values.shape)
 
+    k = KMeans(k, max)  
+    y_pred = k.predict(pixel_values)
 
-    k = KMeans(K = k, max_iters = max)
-    yPred = k.pred(pixel_values)
+    centers = np.uint8(k.cent())
 
     y_pred = y_pred.astype(int)
-    np.unique(y_pred)
+    #np.unique(y_pred)
 
-    labels = yPred.flatten()
+    labels = y_pred.flatten()
     segmented_image = centers[labels.flatten()]
-    segmented_image = segmented_image.reshape(image.shape)
+    segmented_image = segmented_image.reshape(im.shape)
+
     plt.imshow(segmented_image)
     plt.show()
 
 
-
-
-
 #"/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/let51.BMP"
 def main():
-    directory = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/let51.BMP"
+    directory = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/inter01.BMP"
     im_org = Image.open(directory)
-
+    #arr = np.array(im_org)
     
 
     arr = p1.pixel_val_grey(im_org)
-    #clustering(arr,3, 100)
-    hist = p1.histo_one(arr)
-    #arr = Edge_Detec1(arr)
+    #clustering(arr, 3, 100)
+    arr = Scharr(arr)
 
-
-    #arr = balanced(arr)
-
-    arr = p1.histo_equal(arr,hist)
     #hist = p1.histo_one(arr)
-    #arr = Thresh_otsu(arr)
 
     #arr = p1.binary(arr,t)
     Image.fromarray(arr).save("NI.BMP")
