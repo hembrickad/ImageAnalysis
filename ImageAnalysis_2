@@ -383,7 +383,6 @@ def Thresh_otsu(array, min = 10000):
                     n[2] = n[0]
         return array
 
-
 ##Clustering## --Complete
 def clustering(im, k, max):
     pixel_values = im.reshape((-1, 3))
@@ -404,7 +403,6 @@ def clustering(im, k, max):
 
     plt.imshow(segmented_image)
     plt.show()
-
 
 #"/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/let51.BMP"
 def main():
