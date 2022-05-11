@@ -406,19 +406,20 @@ def clustering(im, k, max):
 
 #"/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/let51.BMP"
 def main():
-    directory = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/super01.BMP"
+    directory = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/park.png"
     im_org = Image.open(directory)
-    arr = np.array(im_org)
+    #arr = np.array(im_org)
     
 
-    #arr = p1.pixel_val_grey(im_org)
-    clustering(arr, 3, 100)
+    arr = p1.pixel_val_grey(im_org)
+    #clustering(arr, 10, 50)
+    hist = p1.histo_one(arr)
     #arr = Scharr(arr)
+    arr = p1.histo_equal(arr,hist)
 
-    #hist = p1.histo_one(arr)
 
     #arr = p1.binary(arr,t)
-    #Image.fromarray(arr).save("NI.BMP")
+    Image.fromarray(arr).save("NI.png")
 
 if __name__ == "__main__":
     main()   

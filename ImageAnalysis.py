@@ -22,10 +22,13 @@ timeSheet = dict()
 #Miscellaneous Methods
 def intp(image, histo):
     for x in image:
+        i = 0
         for n in x:
-            n[0] = histo[n[0]] + (n[0] - (n[0] + 1))*((histo[n[0]+1]-histo[n[0]])/((n[0]+1)-n[0]))
-            n[1] = n[0]
-            n[2] = n[0]
+            if n[0] != 255:
+                n[0] = histo[n[0]] + (n[0] - (n[0] + 1))*((histo[n[0]+1]-histo[n[0]])/((n[0]+1)-n[0]))
+                n[1] = n[0]
+                n[2] = n[0]
+        i += 1
     return image
 
 def msqe(qArray, rArray):
