@@ -8,6 +8,7 @@ import collections
 import pandas as pd
 import config as cfg
 from PIL import Image
+from pathlib import Path
 from random import randint
 import ImageAnalysis as p1
 import ImageAnalysis_2 as p2
@@ -15,6 +16,7 @@ from time import perf_counter
 import matplotlib.pyplot as plt
 
 ### Global ###
+dataset = list()
 
 ### KNN ###
 def EuDist(r1, r2):
@@ -76,6 +78,15 @@ def average(hist):
 
 ####Cosmetics####
 def data(image,p,a,r,av)
+    #header = ['perimeter', 'area', 'roundness', 'tone', 'class']
+    name = Path(image).stem
+    name = re.sub(r'[0-9]+','',s)
+    d =list((p,a,r,av,name))
+    dataset.append(d)
+
+def csv():
+    df = pd.DataFrame(dataset)
+    df.to_csv('Feature_Extraction.csv')
 
 
 
