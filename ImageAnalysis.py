@@ -297,10 +297,6 @@ def config():
         timeSheet['HistoAVG'].append(total/499)
 
 
-
-
-
-
 #SPECTRUM MANIPULATION
 def pixel_val_grey(image, channel = "k"):
     array = np.array(image)

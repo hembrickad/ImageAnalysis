@@ -62,7 +62,7 @@ def area(image):
     a = 0
     for x in image:
         for y in x:
-            if y[0] != 0:
+            if y[0] != 255:
                 a += 1
     return a 
 
@@ -70,47 +70,68 @@ def roundness(image, p, a):
     r = (p*p)/(4* math.pi *a)
     return r
 
-def average(hist):
-    count = 0
+def mode(hist):
+    high = 0
+    mode = 0
     for x in range(len(hist)):
-        if x == 1: continue
-        else:
-            count += hist[x]
-    return count/254
+        if hist[x] > high and x != 255:
+            high = hist[x]
+            mode = x
+    return mode
 
 ####Cosmetics####
-def data(image,p,a,r,av):
-    #header = ['perimeter', 'area', 'roundness', 'tone', 'class']
+def data(image,p,a,r,m):
+    #header = ['perimeter', 'area', 'roundness', 'mode', 'class']
     name = pathlib.PurePosixPath(image).stem
     name = re.sub(r'[0-9]+','',name)
-    d =list((p,a,r,av,name))
+    d =list((p,a,r,m,name))
     dataset.append(d)
 
 def csv():
     df = pd.DataFrame(dataset)
-    df.to_csv('/Users/Adhsketch/Desktop/repos/ImageAnalysis/Feature_Extraction.csv')
+    df.to_csv('/Users/Adhsketch/Desktop/repos/ImageAnalysis/Feature_Extraction.csv', header = ['perimeter', 'area', 'roundness', 'mode', 'class'])
 
+def input(directory):
+    for fil in os.listdir(directory):
+        if fil.endswith(".BMP"):
+            im_org = Image.open(directory+fil)
+            arr = p1.pixel_val_grey(im_org)
+            arr = p2.balanced(arr)
 
+            hist = p1.histo_one(arr)
+
+            p = perimeter(arr)
+            a = area(arr)
+            r = roundness(arr,p ,a)
+            m = mode(hist)
+
+            data(directory+fil,p,a,r,m)
+    csv()
+            
 
 
 #"/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/let51.BMP"
 def main():
-    directory = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/let51.BMP"
-    im_org = Image.open(directory)
+    directory = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/Test/"
+    input(directory)
+    '''im_org = Image.open(directory)
     arr = p1.pixel_val_grey(im_org)
     arr = p2.balanced(arr)
+    Image.fromarray(arr).save("NI.BMP")
+
     hist = p1.histo_one(arr)
 
     p = perimeter(arr)
     a = area(arr)
     r = roundness(arr,p ,a)
-    av = average(hist)
+    m = mode(hist)
 
-    data(directory, p, a, r, av)
+    data(directory, p, a, r, m)
+    csv()
+'''
 
 
-
-    #Image.fromarray(arr).save("NI.BMI")
+    #
 
 if __name__ == "__main__":
     main()   
