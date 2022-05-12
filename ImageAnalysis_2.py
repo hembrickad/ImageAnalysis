@@ -1,0 +1,426 @@
+import config as cfg
+import ImageAnalysis as p1
+import numpy as np
+import collections
+import pandas as pd
+from PIL import Image
+from random import randint     
+import matplotlib.pyplot as plt
+from time import perf_counter
+
+def eDist(x, y):
+    return np.sqrt(np.sum((x-y)**2))
+
+class KMeans():
+    def __init__(self, k=5, iters=100, steps=False):
+        self.k = k
+        self.iters = iters
+        self.steps = steps
+        # list of sample indices for each cluster
+        self.clusters = [[] for _ in range(self.k)]
+        # the centers (mean feature vector) for each cluster
+        self.centroids = []
+   
+    def predict(self, X):
+        self.X = X
+        self.numSamples, self.numFeatures = X.shape
+        
+        # initialize 
+        random_sample_idxs = np.random.choice(self.numSamples, self.k, replace=False)
+        self.centroids = [self.X[idx] for idx in random_sample_idxs]
+        # Optimize clusters
+        for _ in range(self.iters):
+            # Assign samples to closest centroids (create clusters)
+            self.clusters = self.createClusters(self.centroids)
+            if self.steps:
+                self.plot()
+            # Calculate new centroids from the clusters
+            centroidsOld = self.centroids
+            self.centroids = self.getCentroids(self.clusters)
+            
+            # check if clusters have changed
+            if self.converged(centroidsOld, self.centroids):
+                break
+            if self.steps:
+                self.plot()
+        # Classify samples as the index of their clusters
+        return self.getLabels(self.clusters)
+   
+    def getLabels(self, clusters):
+        # each sample will get the label of the cluster it was assigned to
+        labels = np.empty(self.numSamples)
+        for cluster_idx, cluster in enumerate(clusters):
+            for sample_index in cluster:
+                labels[sample_index] = cluster_idx
+        return labels
+   
+    def createClusters(self, centroids):
+        # Assign the samples to the closest centroids to create clusters
+        clusters = [[] for _ in range(self.k)]
+        for idx, sample in enumerate(self.X):
+            centroid_idx = self.closestCentroid(sample, centroids)
+            clusters[centroid_idx].append(idx)
+        return clusters
+   
+    def closestCentroid(self, sample, centroids):
+        # distance of the current sample to each centroid
+        dist = [eDist(sample, p) for p in centroids]
+        closest_index = np.argmin(dist)
+        return closest_index
+   
+    def getCentroids(self, clusters):
+        # assign mean value of clusters to centroids
+        centroids = np.zeros((self.k, self.numFeatures))
+        for cluster_idx, cluster in enumerate(clusters):
+            clusterMean = np.mean(self.X[cluster], axis=0)
+            centroids[cluster_idx] = clusterMean
+        return centroids
+    
+    def converged(self, centroidsOld, centroids):
+        # distances between each old and new centroids, fol all centroids
+        dist = [eDist(centroidsOld[i], centroids[i]) for i in range(self.k)]
+        return sum(dist) == 0
+    
+    def plot(self):
+        fig, ax = plt.subplots(figsize=(12, 8))
+        for i, index in enumerate(self.clusters):
+            p = self.X[index].T
+            ax.scatter(*p)
+        for p in self.centroids:
+            ax.scatter(*p, marker="x", color='black', linewidth=2)
+        plt.show()
+    
+    def cent(self):
+        return self.centroids
+
+#Erosion--Complete
+def Erosion(array, Efilter = [[0, 1, 0],[1, 1, 1],[0, 1, 0]]):
+
+    array = p1.binary(array)
+
+    nArray = array.copy()
+    image_width, image_height = array.shape[1], array.shape[0]
+    
+
+    for y in range(array.shape[0]):
+        for x in range(array.shape[1]):
+            # Get Image Filter Pixels
+            filter_mid = len(Efilter)//2
+
+            # Skip Border Pixels
+            if x-filter_mid < 0 or x+filter_mid > image_width: 
+                continue
+            if y-filter_mid < 0 or y+filter_mid > image_height: 
+                continue
+            filter_pixels = array[y-filter_mid:y+filter_mid+1,x-filter_mid:x+filter_mid+1]
+
+            # Apply Median Spatial Filter Over Greyscale Image
+            # Store First Element (Pixel Value) In Fitler Pixel Row, Since
+            #  They're All The Same Value (Greyscale Image)
+            new_pixel_val, non_zero_count = 0, 0
+            for filter_y, rgb_pixel_values in enumerate(filter_pixels):
+                for filter_x, rgb_values in enumerate(rgb_pixel_values):
+                    pixel_weight = Efilter[filter_y][filter_x]
+                    pixel_value  = rgb_values[0]
+                    new_pixel_val += pixel_weight * pixel_value
+                    if pixel_weight != 0: non_zero_count += 1
+            
+            # Compute Average Pixel Value
+            new_pixel_val /= non_zero_count
+
+            # Check(s)
+            if new_pixel_val < 0  : new_pixel_val = 0
+            if new_pixel_val > 255: new_pixel_val = 255
+
+            # Set New Pixel Value
+            nArray[y][x][0] = new_pixel_val
+            nArray[y][x][1] = nArray[y][x][0]
+            nArray[y][x][2] = nArray[y][x][0]
+
+    return nArray
+
+#Dilation--Complete   
+def Dilation(array, Dfilter = [[1,0,1],[1, 1, 1],[0, 1, 0]] ):
+    array = p1.binary(array)
+    nArray = array.copy()
+
+    image_width, image_height = array.shape[1],array.shape[0]
+
+    # Compute New Pixel Value
+    filter_mid_y = len(Dfilter)//2
+    filter_mid_x = len(Dfilter[0])//2
+
+    for y in range(array.shape[0]):
+        for x in range(array.shape[1]):
+            # Skip Border Pixels
+            if x-filter_mid_x < 0 or x+filter_mid_x > image_width : continue
+            if y-filter_mid_y < 0 or y+filter_mid_y > image_height: continue
+
+            filter_pixels = array[y-filter_mid_y:y+filter_mid_y+1,x-filter_mid_x:x+filter_mid_x+1]
+
+            # Apply Spatial Filter Over Greyscale Image
+            # Only Use First Element (Pixel Value) In Filter Pixel Row, Since
+            #   They're All The Same Value (Greyscale Image)
+            new_pixel_val, non_zero_count = 0, 0
+
+            for filter_y, rgb_pixel_values in enumerate(filter_pixels):
+                for filter_x, rgb_values in enumerate(rgb_pixel_values):
+                    pixel_weight = Dfilter[filter_y][filter_x]
+                    pixel_value  = rgb_values[0]
+                    new_pixel_val += pixel_weight * pixel_value
+                    if pixel_weight != 0: non_zero_count += 1
+            
+            # Compute Average Pixel Value
+            new_pixel_val /= non_zero_count
+
+            # Check(s)
+            if new_pixel_val < 0  : new_pixel_val = 0
+            if new_pixel_val > 255: new_pixel_val = 255
+
+            # Set New Pixel Value
+            nArray[y][x][0] = new_pixel_val
+            nArray[y][x][1] = nArray[y][x][0]
+            nArray[y][x][2] = nArray[y][x][0]
+
+    return nArray
+
+#Border Detection --- Complete
+def Border_Detect(array):
+    EArray = Erosion(array)
+    DArray = Dilation(array)
+    row = 0
+
+    for x in array:
+        for y in range(len(x)):
+            if EArray[row,y,0] == DArray[row,y,0]:
+                x[y,0] = 0
+                x[y,1] = 0
+                x[y,2] = 0
+            else:
+                x[y,0] = 255
+                x[y,1] = 255
+                x[y,2] = 255
+        row +=1
+    return array
+
+#Scharr -- Complete
+def Scharr(array):
+    #array = p1.MFilter(array)
+    Lapfilter = [[ -3,0,3],[ -10,0,10],[-3,0,3]]
+    nArray = array.copy()
+    image_width, image_height = array.shape[1], array.shape[0]
+    
+  # Compute New Pixel Value
+    filter_mid_y = len(Lapfilter)//2
+    filter_mid_x = len(Lapfilter[0])//2
+
+    for y in range(array.shape[0]):
+        for x in range(array.shape[1]):
+            # Skip Border Pixels
+            if x-filter_mid_x < 0 or x+filter_mid_x > image_width : continue
+            if y-filter_mid_y < 0 or y+filter_mid_y > image_height: continue
+
+            filter_pixels = array[y-filter_mid_y:y+filter_mid_y+1,x-filter_mid_x:x+filter_mid_x+1]
+
+            # Apply Spatial Filter Over Greyscale Image
+            # Only Use First Element (Pixel Value) In Filter Pixel Row, Since
+            #   They're All The Same Value (Greyscale Image)
+            new_pixel_val, non_zero_count = 0, 0
+
+            for filter_y, rgb_pixel_values in enumerate(filter_pixels):
+                for filter_x, rgb_values in enumerate(rgb_pixel_values):
+                    pixel_weight = Lapfilter[filter_y][filter_x]
+                    pixel_value  = rgb_values[0]
+                    new_pixel_val += pixel_weight * pixel_value
+                    if pixel_weight != 0: non_zero_count += 1
+            
+            # Compute Average Pixel Value
+
+            # Check(s)
+            if new_pixel_val < 0  : new_pixel_val = 0
+            if new_pixel_val > 255: new_pixel_val = 255
+
+            # Set New Pixel Value
+            nArray[y][x][0] = new_pixel_val
+            nArray[y][x][1] = nArray[y][x][0]
+            nArray[y][x][2] = nArray[y][x][0]
+
+    return nArray
+
+#Laplacian -- Complete
+def Laplacian(array):
+    array = p1.MFilter(array)
+    Lapfilter = [[ 0, 6, 0],[ 6,-24,6],[0,6,0]]
+    nArray = array.copy()
+    image_width, image_height = array.shape[1], array.shape[0]
+    
+  # Compute New Pixel Value
+    filter_mid_y = len(Lapfilter)//2
+    filter_mid_x = len(Lapfilter[0])//2
+
+    for y in range(array.shape[0]):
+        for x in range(array.shape[1]):
+            # Skip Border Pixels
+            if x-filter_mid_x < 0 or x+filter_mid_x > image_width : continue
+            if y-filter_mid_y < 0 or y+filter_mid_y > image_height: continue
+
+            filter_pixels = array[y-filter_mid_y:y+filter_mid_y+1,x-filter_mid_x:x+filter_mid_x+1]
+
+            # Apply Spatial Filter Over Greyscale Image
+            # Only Use First Element (Pixel Value) In Filter Pixel Row, Since
+            #   They're All The Same Value (Greyscale Image)
+            new_pixel_val, non_zero_count = 0, 0
+
+            for filter_y, rgb_pixel_values in enumerate(filter_pixels):
+                for filter_x, rgb_values in enumerate(rgb_pixel_values):
+                    pixel_weight = Lapfilter[filter_y][filter_x]
+                    pixel_value  = rgb_values[0]
+                    new_pixel_val += pixel_weight * pixel_value
+                    if pixel_weight != 0: non_zero_count += 1
+            
+            # Compute Average Pixel Value
+
+            # Check(s)
+            if new_pixel_val < 0  : new_pixel_val = 0
+            if new_pixel_val > 255: new_pixel_val = 255
+
+            # Set New Pixel Value
+            nArray[y][x][0] = new_pixel_val
+            nArray[y][x][1] = nArray[y][x][0]
+            nArray[y][x][2] = nArray[y][x][0]
+
+    return nArray
+
+## Segmentation ##
+
+#Balanced--Complete
+def balanced(array, minCount = 1800):
+    array = p1.LFilter(array)
+    histo = p1.histo_one(array)
+
+    numBins = len(histo) 
+    hS = 0
+
+    while histo[hS] < minCount:
+        hS += 1
+    hE = numBins - 1
+
+    while histo[hE] < minCount:
+        hE -= 1
+    hCount = int(round((hS + hE)/2))
+    weightL = np.sum(histo[hS:hCount])   
+    weightR = np.sum(histo[hCount:hE +1]) 
+
+    while hS < hE and weightR > 0 and weightL > 0 :
+        if weightR < weightL:
+            weightL -= histo[hS]
+            hS +=1
+        else:
+            weightR -= histo[hE]
+            hE -= 1
+        newCount = int(round((hE + hS) / 2))
+
+        if newCount < hCount:
+            weightL -= histo[hCount]
+            weightR += histo[hCount]
+        elif newCount > hCount:
+            weightL += histo[hCount]
+            weightR -= histo[hCount]
+        hCount = newCount
+    print(hCount)
+    for x in array:
+        for n in x:
+            if n[0] >= hCount:
+                n[0] = 255
+                n[1] = 255
+                n[2] = 255
+            else:
+                n[0] = n[0]
+                n[1] = n[0]
+                n[2] = n[0]
+    return array
+
+#Otsu--Complete
+def Thresh_otsu(array, min = 10000):
+    array = p1.LFilter(array)
+    histo = p1.histo_one(array)
+    tot = array.shape[1] * array.shape[0]
+    backW, foreW, sum, threshold = 0,0,0,0
+    backSum, backMean, foreMean, varBet, varMax= 0.0, 0.0, 0.0, 0.0, 0.0
+    
+    for t in range(256):
+        sum += t * histo[t]
+    
+    for t in range(256):
+        backW += histo[t]
+        if(backW <= min): continue
+
+        foreW = tot - backW
+
+        if(foreW == 0): break
+
+        backMean = backSum/backW
+        foreMean = (sum - backSum)/foreW
+
+        varBet = float(backW) + float(foreW) * ((backMean - foreMean)*(backMean - foreMean))
+
+        if(varBet > varMax):
+            varMax = varBet
+            threshold = t
+
+        if(threshold == 0): threshold = 0     
+        else: threshold = threshold
+
+        print(threshold)
+        for x in array:
+            for n in x:
+                if n[0] >= threshold:
+                    n[0] = 255
+                    n[1] = 255
+                    n[2] = 255
+                else:
+                    n[0] = n[0]
+                    n[1] = n[0]
+                    n[2] = n[0]
+        return array
+
+##Clustering## --Complete
+def clustering(im, k, max):
+    pixel_values = im.reshape((-1, 3))
+    pixel_values = np.float32(pixel_values)
+    #print(pixel_values.shape)
+
+    k = KMeans(k, max)  
+    y_pred = k.predict(pixel_values)
+
+    centers = np.uint8(k.cent())
+
+    y_pred = y_pred.astype(int)
+    #np.unique(y_pred)
+
+    labels = y_pred.flatten()
+    segmented_image = centers[labels.flatten()]
+    segmented_image = segmented_image.reshape(im.shape)
+
+    plt.imshow(segmented_image)
+    plt.show()
+
+#"/Users/Adhsketch/Desktop/repos/ImageAnalysis/cell_smears/let51.BMP"
+def main():
+    directory = "/Users/Adhsketch/Desktop/repos/ImageAnalysis/park.png"
+    im_org = Image.open(directory)
+    #arr = np.array(im_org)
+    
+
+    arr = p1.pixel_val_grey(im_org)
+    #clustering(arr, 10, 50)
+    hist = p1.histo_one(arr)
+    #arr = Scharr(arr)
+    arr = p1.histo_equal(arr,hist)
+
+
+    #arr = p1.binary(arr,t)
+    Image.fromarray(arr).save("NI.png")
+
+if __name__ == "__main__":
+    main()   
